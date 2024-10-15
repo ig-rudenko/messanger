@@ -13,6 +13,7 @@ import Badge from "primevue/badge";
 import FloatLabel from "primevue/floatlabel";
 import Splitter from 'primevue/splitter';
 import SplitterPanel from 'primevue/splitterpanel';
+import Textarea from "primevue/textarea";
 
 // @ts-ignore
 import Aura from './presets/aura';
@@ -37,5 +38,6 @@ app.component("Message", Message)
 app.component('FloatLabel', FloatLabel);
 app.component("Splitter", Splitter)
 app.component("SplitterPanel", SplitterPanel)
+app.component("Textarea", Textarea)
 
 app.mount("#app");

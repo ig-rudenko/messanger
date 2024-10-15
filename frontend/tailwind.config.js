@@ -2,6 +2,7 @@
 const primeui = require('tailwindcss-primeui');
 
 export default {
+    darkMode: 'selector',
     content: [
         "./presets/**/*.{js,vue,ts}",
         "./index.html",

@@ -19,8 +19,8 @@ function verboseDatetime(timestamp: number): string {
 
 <template>
   <div class="m-1 p-3 rounded w-fit">
-    <div>{{ message.message }}</div>
-    <div class="text-sm ">{{ verboseDatetime(message.timestamp) }}</div>
+    <div class="pb-2">{{ message.message }}</div>
+    <div class="text-sm font-light">{{ verboseDatetime(message.timestamp) }}</div>
   </div>
 </template>
 

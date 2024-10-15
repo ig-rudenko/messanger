@@ -12,45 +12,81 @@ const props = defineProps({
 
 const currentUser = "igor"
 
-
 const chatService = new ChatService()
 const chatMessages: Ref<ChatMessageType[]> = ref([])
 
-chatService.getChatMessages(props.chatId).then(value => chatMessages.value = value)
+function scrollToEnd() {
+  // Автопрокрутка к нижнему сообщению при открытии
+  const container = document.getElementById('messages-container')!;
+  container.scrollTop = container.scrollHeight;
+}
+
+chatService.getChatMessages(props.chatId).then(value => {
+  chatMessages.value = value;
+  setTimeout(scrollToEnd, 200)
+})
 
 function getMessageClasses(msg: ChatMessageType, index: number): string[] {
   let classes = []
-  if (!chatMessages.value[index-1] || chatMessages.value[index-1].senderUsername != msg.senderUsername) {
+  if (!chatMessages.value[index - 1] || chatMessages.value[index - 1].senderUsername != msg.senderUsername) {
     classes.push("rounded-t-2xl")
   }
-  if (!chatMessages.value[index+1] || chatMessages.value[index+1].senderUsername != msg.senderUsername) {
+  if (!chatMessages.value[index + 1] || chatMessages.value[index + 1].senderUsername != msg.senderUsername) {
     classes.push("rounded-b-2xl")
   }
   if (msg.senderUsername == currentUser) {
-    classes.push(...["self-end", "bg-gray-200"])
+    classes.push(...["self-end", "bg-gray-200", "dark:bg-gray-700"])
   } else {
-    classes.push("bg-indigo-200")
+    classes.push(...["bg-indigo-200", "dark:bg-indigo-900"])
   }
-  console.log(msg.message, classes)
   return classes
 }
 
 </script>
 
 <template>
-<div v-if="chatMessages" class="w-full h-full flex flex-col p-10 overflow-y-auto">
-  <template v-for="(msg, index) in chatMessages">
-    <ChatMessage :message="msg" :class="getMessageClasses(msg, index)" />
-  </template>
-  <template v-for="(msg, index) in chatMessages">
-    <ChatMessage :message="msg" :class="getMessageClasses(msg, index)" />
-  </template>
-  <template v-for="(msg, index) in chatMessages">
-    <ChatMessage :message="msg" :class="getMessageClasses(msg, index)" />
-  </template>
-</div>
+  <div v-if="chatMessages" id="messages-container" class="group w-full h-full flex flex-col p-10 overflow-y-auto">
+    <template v-for="(msg, index) in chatMessages">
+      <ChatMessage :message="msg" :class="getMessageClasses(msg, index)"/>
+    </template>
+    <template v-for="(msg, index) in chatMessages">
+      <ChatMessage :message="msg" :class="getMessageClasses(msg, index)"/>
+    </template>
+    <template v-for="(msg, index) in chatMessages">
+      <ChatMessage :message="msg" :class="getMessageClasses(msg, index)"/>
+    </template>
+  </div>
 </template>
 
 <style scoped>
+::-webkit-scrollbar {
+  display: inline;
+  width: 7px;
+  height: 5px;
+}
+::-webkit-scrollbar-track-piece {
+  background-color: var(--p-surface-900);
+  border-radius: 20px;
+  opacity: 0.2;
+}
+.group:hover::-webkit-scrollbar-track-piece {
+  background-color: var(--p-surface-600);
+  border-radius: 20px;
+  opacity: 0.2;
+}
+::-webkit-scrollbar-thumb {
+  background-color: var(--p-surface-900);
+  border-radius: 20px;
+  height: 4px;
+}
 
+.group:hover::-webkit-scrollbar-thumb {
+  background-color: var(--p-surface-800);
+  border-radius: 20px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--p-surface-800);
+}
 </style>

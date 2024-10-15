@@ -6,8 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
-    "preview": "vite preview",
-    "tw": "npx tailwindcss -i ./src/input.css -o ./src/output.css --watch"
+    "preview": "vite preview"
   },
   "dependencies": {
     "axios": "^1.7.7",

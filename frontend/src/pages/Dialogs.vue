@@ -5,16 +5,17 @@ import ChatElement from "@/components/ChatElement.vue";
 import {ChatElementType, ChatService} from "@/services/chats.ts";
 import {Ref, ref} from "vue";
 import ChatDialog from "@/components/ChatDialog.vue";
+import ChatTextInput from "@/components/ChatTextInput.vue";
 
 const chatService = new ChatService()
 
 const chats: Ref<ChatElementType[]> = ref([])
-const openedDialogWith: Ref<string> = ref("")
+const openedDialogId: Ref<string> = ref("")
 
 chatService.getChats().then(value => chats.value = value)
 
 function openDialog(username: string) {
-  openedDialogWith.value = username
+  openedDialogId.value = username
 }
 
 </script>
@@ -25,11 +26,15 @@ function openDialog(username: string) {
       <SplitterPanel class="flex flex-col" :size="25" :minSize="10">
         <Profile/>
         <div class="overflow-y-auto">
-          <ChatElement v-for="chat in chats" :chat="chat" @click="openDialog(chat.id)" />
+          <ChatElement :class="openedDialogId==chat.id?'bg-gray-300 dark:bg-gray-800':''"
+                       v-for="chat in chats" :chat="chat" @click="openDialog(chat.id)" />
         </div>
       </SplitterPanel>
-      <SplitterPanel class="flex items-center justify-center" :size="75">
-        <ChatDialog v-if="openedDialogWith" :chat-id="openedDialogWith" />
+      <SplitterPanel class="flex items-center flex-col justify-center" :size="75">
+        <template v-if="openedDialogId">
+          <ChatDialog :chat-id="openedDialogId" />
+          <ChatTextInput/>
+        </template>
       </SplitterPanel>
     </Splitter>
   </div>
