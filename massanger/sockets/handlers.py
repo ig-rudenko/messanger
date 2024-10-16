@@ -10,15 +10,15 @@ router = APIRouter(prefix="", tags=["ws"])
 # WebSocket для личной переписки
 @router.websocket("")
 async def private_chat(websocket: WebSocket, user: User = Depends(authenticate_websocket)):
-    await manager.connect(websocket, user.username)
+    await manager.connect(websocket, user.id)
 
     try:
         while True:
             data = await websocket.receive_text()
-            await manager.analyze_message(data, user.username)
+            await manager.analyze_message(data, user.id)
             # await manager.broadcast(f"{user.id}: {data}", user.id)
     except WebSocketDisconnect:
-        manager.disconnect(websocket, user.username)
+        manager.disconnect(websocket, user.id)
 
 
 # eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJ0eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzI4OTkwNzUyfQ.gxb-C0wOM7U941Zvo54c2lGZSiTLLAdqCvTrH2slqg3UBHzNE6oQEzA_SWzd4VgRqW6j35E47n0gKrLfNrAtqw

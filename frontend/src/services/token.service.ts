@@ -1,6 +1,6 @@
 import {UserTokens} from "./user";
 
-class TokenService {
+export class TokenService {
     getLocalRefreshToken() {
         const user = this.getUserTokens();
         return user.refreshToken;
@@ -35,4 +35,4 @@ class TokenService {
     }
 }
 
-export default new TokenService();
+export const tokenService = new TokenService();

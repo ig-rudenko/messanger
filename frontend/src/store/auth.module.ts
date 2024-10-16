@@ -1,6 +1,6 @@
 import AuthService from '@/services/auth.service.js';
 import UserService from "@/services/user.service";
-import TokenService from "@/services/token.service";
+import {tokenService} from "@/services/token.service";
 import {createNewUser, LoginUser, RegisterUser, User, UserTokens} from "@/services/user";
 import api from "@/services/api";
 
@@ -22,7 +22,7 @@ const user = UserService.getUser()
 const initialState = new UserState(
     new Status(user !== null && user.username?.length > 0),
     user,
-    TokenService.getUserTokens(),
+    tokenService.getUserTokens(),
 )
 
 
@@ -73,7 +73,7 @@ export const auth = {
                         const user = createNewUser(resp.data)
                         UserService.setUser(user)
                         state.user = user
-                        state.userTokens = TokenService.getUserTokens()
+                        state.userTokens = tokenService.getUserTokens()
                     }
                 )
         },

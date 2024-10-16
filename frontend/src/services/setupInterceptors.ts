@@ -1,11 +1,11 @@
 import axiosInstance from "./api";
-import TokenService from "./token.service";
-import router from "../router";
+import {tokenService} from "./token.service";
+import {refreshAccessToken} from "@/services/token.refresh.ts";
 
-const setup = (store: any) => {
+const setup = () => {
     axiosInstance.interceptors.request.use(
         (config) => {
-            const token = TokenService.getLocalAccessToken();
+            const token = tokenService.getLocalAccessToken();
             if (token) config.headers["Authorization"] = 'Bearer ' + token;
             return config;
         },
@@ -28,28 +28,32 @@ const setup = (store: any) => {
                     originalConfig.headers["Content-Type"] = "application/json";
 
                     try {
-                        const refreshToken = TokenService.getLocalRefreshToken()
-                        if (!refreshToken) return;
-                        const rs = await axiosInstance.post(
-                            "auth/token/refresh",
-                            { refreshToken: refreshToken },
-                            originalConfig
-                        )
-                            .then(value => value, reason => reason.response)
-                            .catch(reason => reason.response);
+                        // const refreshToken = TokenService.getLocalRefreshToken()
+                        // if (!refreshToken) return;
+                        // const rs = await axiosInstance.post(
+                        //     "auth/token/refresh",
+                        //     { refreshToken: refreshToken },
+                        //     originalConfig
+                        // )
+                        //     .then(value => value, reason => reason.response)
+                        //     .catch(reason => reason.response);
+                        //
+                        // if (rs.status !== 200) {
+                        //     store.dispatch("auth/logout")
+                        //     await router.push("/login");
+                        //     return Promise.reject(err)
+                        // }
+                        //
+                        // const { accessToken } = rs.data;
+                        //
+                        // store.dispatch('auth/refreshToken', accessToken);
+                        // TokenService.updateLocalAccessToken(accessToken);
 
-                        if (rs.status !== 200) {
-                            store.dispatch("auth/logout")
-                            await router.push("/login");
-                            return Promise.reject(err)
-                        }
+                        const status = await refreshAccessToken(tokenService)
 
-                        const { accessToken } = rs.data;
+                        if (status) return axiosInstance(originalConfig);
 
-                        store.dispatch('auth/refreshToken', accessToken);
-                        TokenService.updateLocalAccessToken(accessToken);
-
-                        return axiosInstance(originalConfig);
+                        return Promise.reject(err)
                     } catch (_error) {
                         localStorage.removeItem("user")
                         return Promise.reject(_error);

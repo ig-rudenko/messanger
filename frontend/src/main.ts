@@ -4,6 +4,7 @@ import "primeicons/primeicons.css";
 import App from "./App.vue";
 
 import PrimeVue from 'primevue/config';
+import ToastService from 'primevue/toastservice';
 import Tooltip from 'primevue/tooltip';
 import Avatar from "primevue/avatar";
 import Button from "primevue/button";
@@ -20,11 +21,12 @@ import Aura from './presets/aura';
 import router from "./router.ts";
 import store from "@/store";
 
-const app = createApp(App);
+export const app = createApp(App);
 app.use(PrimeVue, {
     unstyled: true,
     pt: Aura,
 });
+app.use(ToastService);
 app.use(store);
 app.use(router);
 

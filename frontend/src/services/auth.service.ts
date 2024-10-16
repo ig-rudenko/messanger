@@ -1,5 +1,5 @@
 import api from "./api";
-import TokenService from "./token.service";
+import {tokenService} from "./token.service";
 import {LoginUser, RegisterUser, UserTokens} from "./user";
 import UserService from "./user.service";
 
@@ -13,7 +13,7 @@ class AuthService {
             .then(
                 response => {
                     if (response.data.accessToken) {
-                        TokenService.setUser(new UserTokens(response.data.accessToken, response.data.refreshToken || null));
+                        tokenService.setUser(new UserTokens(response.data.accessToken, response.data.refreshToken || null));
                     }
                     return response
                 },
@@ -24,7 +24,7 @@ class AuthService {
     }
 
     logout() {
-        TokenService.removeUser();
+        tokenService.removeUser();
         UserService.removeUser();
     }
 

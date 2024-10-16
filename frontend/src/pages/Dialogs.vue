@@ -1,21 +1,48 @@
 <script setup lang="ts">
+import {onMounted} from "vue";
+import {Ref, ref} from "vue";
 
 import Profile from "@/components/Profile.vue";
-import ChatElement from "@/components/ChatElement.vue";
-import {ChatElementType, ChatService} from "@/services/chats.ts";
-import {Ref, ref} from "vue";
 import ChatDialog from "@/components/ChatDialog.vue";
+import ChatElement from "@/components/ChatElement.vue";
 import ChatTextInput from "@/components/ChatTextInput.vue";
+
+import {infoToast} from "@/services/my.toast";
+import WebSocketConnector from "@/services/websocket";
+import {ChatElementType, ChatService, handleMessage, RequestMessageType} from "@/services/chats";
+
+let socket: WebSocketConnector|null = null;
+
+onMounted(() => {
+  socket = new WebSocketConnector(`ws://${location.host}/ws`)
+
+  socket.setOnMessage((ev: MessageEvent) => {
+    handleMessage(ev.data).then(
+        msg => infoToast(msg.type, msg.message)
+    )
+
+  })
+})
 
 const chatService = new ChatService()
 
 const chats: Ref<ChatElementType[]> = ref([])
-const openedDialogId: Ref<string> = ref("")
+const openedDialogId: Ref<number> = ref(0)
 
 chatService.getChats().then(value => chats.value = value)
 
-function openDialog(username: string) {
-  openedDialogId.value = username
+function openDialog(id: number) {
+  openedDialogId.value = id
+}
+
+function sendMessage(text: string) {
+  const data: RequestMessageType = {
+    type: "message",
+    status: "new",
+    recipientId: openedDialogId.value,
+    message: text
+  }
+  if (socket) socket.sendMessage(data)
 }
 
 </script>
@@ -33,7 +60,7 @@ function openDialog(username: string) {
       <SplitterPanel class="flex items-center flex-col justify-center" :size="75">
         <template v-if="openedDialogId">
           <ChatDialog :chat-id="openedDialogId" />
-          <ChatTextInput/>
+          <ChatTextInput @sendMessage="sendMessage"/>
         </template>
       </SplitterPanel>
     </Splitter>

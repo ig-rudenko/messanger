@@ -1,10 +1,14 @@
+import {refreshAccessToken} from "@/services/token.refresh.ts";
+import {tokenService} from "@/services/token.service.ts";
+
 enum ChatType {
     USER = "user",
     GROUP = "group"
 }
 
 export interface ChatElementType {
-    id: string
+    id: number
+    username: string
     name: string
     image: string
     lastMessage: string
@@ -14,10 +18,35 @@ export interface ChatElementType {
 }
 
 export interface ChatMessageType {
-    senderUsername: string
-    recipientUsername: string
+    senderId: number
+    recipientId: number
     timestamp: number
     message: string
+}
+
+export interface RequestMessageType {
+    type: string
+    status: string
+    recipientId: number
+    message: string
+}
+
+export interface ResponseMessageType extends RequestMessageType{
+    senderId: number
+    createdAt: number
+}
+
+
+export async function handleMessage(data: any): Promise<ResponseMessageType> {
+    const msg: ResponseMessageType = JSON.parse(data);
+    if (msg.status == "exception") {
+        console.log(msg.message)
+        if (msg.message == "Invalid access token") {
+            await refreshAccessToken(tokenService)
+        }
+    }
+    return msg
+
 }
 
 
@@ -29,7 +58,8 @@ export class ChatService {
         return [
             {
                 type: ChatType.USER,
-                id: "alena",
+                id: 1,
+                username: "alena",
                 name: "Алёна",
                 image: "https://primefaces.org/cdn/primevue/images/avatar/asiyajavayant.png",
                 lastMessage: "Привет! Как дела?",
@@ -38,7 +68,8 @@ export class ChatService {
             },
             {
                 type: ChatType.USER,
-                id: "sznachkov",
+                id: 2,
+                username: "sznachkov",
                 name: "Сергей Значков",
                 image: "https://primefaces.org/cdn/primevue/images/avatar/onyamalimba.png",
                 lastMessage: "Мог быть закрыт, но я проверил сейчас",
@@ -46,7 +77,8 @@ export class ChatService {
             },
             {
                 type: ChatType.USER,
-                id: "ayastremskoy",
+                id: 3,
+                username: "ayastremskoy",
                 name: "Александр Ястремской",
                 image: "https://primefaces.org/cdn/primevue/images/avatar/onyamalimba.png",
                 lastMessage: "Хорошо, что перепутали",
@@ -54,7 +86,8 @@ export class ChatService {
             },
             {
                 type: ChatType.USER,
-                id: "noc",
+                id: 4,
+                username: "noc",
                 name: "ЦУС",
                 image: "https://www.gravatar.com/avatar/05dfd4b41340d09cae045235eb0893c3?d=mp",
                 lastMessage: "А вот и нашли!",
@@ -63,41 +96,42 @@ export class ChatService {
         ]
     }
 
-    async getChatMessages(username: string): Promise<ChatMessageType[]> {
+    async getChatMessages(chat_id: number): Promise<ChatMessageType[]> {
+        console.log(chat_id)
         return [
             {
-                recipientUsername: "igor",
-                senderUsername: "alena",
+                recipientId: 5,
+                senderId: 1,
                 timestamp: 1729001441311,
                 message: "Привет ♥"
             },
             {
-                recipientUsername: "alena",
-                senderUsername: "igor",
+                recipientId: 1,
+                senderId: 5,
                 timestamp: 1729001441321,
                 message: "Привет ☻♥"
             },
             {
-                recipientUsername: "igor",
-                senderUsername: "alena",
+                recipientId: 5,
+                senderId: 1,
                 timestamp: 1729001441331,
                 message: "Чем занимаешься?"
             },
             {
-                recipientUsername: "alena",
-                senderUsername: "igor",
+                recipientId: 1,
+                senderId: 5,
                 timestamp: 1729001441341,
                 message: "Я покушал недавно"
             },
             {
-                recipientUsername: "igor",
-                senderUsername: "alena",
+                recipientId: 5,
+                senderId: 1,
                 timestamp: 1729001441351,
                 message: "Я спала, пока коты меня не разбудили"
             },
             {
-                recipientUsername: "igor",
-                senderUsername: "alena",
+                recipientId: 5,
+                senderId: 1,
                 timestamp: 1729001441361,
                 message: "Сейчас буду чай пить"
             },

@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import Field, BaseModel
 
 from ..base_schemas import CamelAliasModel, CamelSerializerModel
@@ -10,9 +12,10 @@ class MessageSchema(BaseModel):
 
 
 class MessageRequestSchema(CamelAliasModel, MessageSchema):
-    recipient_username: str | None = Field(None)
+    recipient_id: int | None = Field(None)
 
 
 class MessageResponseSchema(CamelSerializerModel, MessageSchema):
-    recipient_username: str
-    sender_username: str
+    recipient_id: int
+    sender_id: int
+    created_at: int

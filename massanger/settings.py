@@ -8,6 +8,7 @@ class _Settings(BaseSettings):
     broadcast_type: str = "local"
 
     database_url: str = "sqlite+aiosqlite:///db.sqlite3"
+    message_storage_type: str = "db_direct"
 
     access_token_expire_minutes: int = 60
     refresh_token_expire_hours: int = 24 * 7

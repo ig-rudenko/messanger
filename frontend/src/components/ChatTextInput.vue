@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import {ref} from "vue";
 
+const emits = defineEmits(["sendMessage"]);
+
 const text = ref("")
 
 const messageSendingIsBlocked = ref(false);
@@ -9,6 +11,7 @@ const unBlockMessageSending = () => messageSendingIsBlocked.value = false;
 
 function sendMessage() {
   if (messageSendingIsBlocked.value) return;
+  emits("sendMessage", text.value);
   text.value = "";
 }
 

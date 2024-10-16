@@ -6,11 +6,11 @@ import ChatMessage from "@/components/ChatMessage.vue";
 const props = defineProps({
   chatId: {
     required: true,
-    type: String,
+    type: Number,
   }
 })
 
-const currentUser = "igor"
+const currentUserId = 5
 
 const chatService = new ChatService()
 const chatMessages: Ref<ChatMessageType[]> = ref([])
@@ -28,13 +28,13 @@ chatService.getChatMessages(props.chatId).then(value => {
 
 function getMessageClasses(msg: ChatMessageType, index: number): string[] {
   let classes = []
-  if (!chatMessages.value[index - 1] || chatMessages.value[index - 1].senderUsername != msg.senderUsername) {
+  if (!chatMessages.value[index - 1] || chatMessages.value[index - 1].senderId != msg.senderId) {
     classes.push("rounded-t-2xl")
   }
-  if (!chatMessages.value[index + 1] || chatMessages.value[index + 1].senderUsername != msg.senderUsername) {
+  if (!chatMessages.value[index + 1] || chatMessages.value[index + 1].senderId != msg.senderId) {
     classes.push("rounded-b-2xl")
   }
-  if (msg.senderUsername == currentUser) {
+  if (msg.senderId == currentUserId) {
     classes.push(...["self-end", "bg-gray-200", "dark:bg-gray-700"])
   } else {
     classes.push(...["bg-indigo-200", "dark:bg-indigo-900"])
