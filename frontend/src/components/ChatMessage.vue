@@ -15,15 +15,20 @@ function verboseDatetime(timestamp: number): string {
   const dateObject = new Date(milliseconds)
   return dateObject.toLocaleString("ru-RU")
 }
+
+function textToHtml(text: string): string {
+  const r = /\n/g
+  return text.replace(r, "<br>")
+}
+
 </script>
 
 <template>
   <div class="m-1 p-3 rounded w-fit">
-    <div class="pb-2">{{ message.message }}</div>
+    <div class="pb-2"><span v-html="textToHtml(message.message)"></span></div>
     <div class="text-sm font-light">{{ verboseDatetime(message.createdAt) }}</div>
   </div>
 </template>
 
 <style scoped>
-
 </style>

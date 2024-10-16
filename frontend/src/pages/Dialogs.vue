@@ -14,6 +14,7 @@ import {scrollChatContainerToEnd} from "@/services/scroller.ts";
 import {useStore} from "vuex";
 import {User} from "@/services/user.ts";
 import router from "@/router.ts";
+import FindPeople from "@/components/FindPeople.vue";
 
 let socket: WebSocketConnector|null = null;
 const store = useStore()
@@ -69,7 +70,7 @@ function openDialog(id: number) {
 
 
 function addMyMessageToChat(data: RequestMessageType) {
-  if (!openedDialogId.value || !chatMessages.value) return;
+  if (!openedDialogId.value || !chatMessages.value || !currentUserId) return;
 
   chatMessages.value.push(
       {
@@ -100,8 +101,11 @@ function sendMessage(text: string) {
 <template>
   <div style="height: 100vh;">
     <Splitter class="h-full">
-      <SplitterPanel class="flex flex-col" :size="25" :minSize="10">
+      <SplitterPanel class="flex flex-col relative" :size="25" :minSize="10">
         <Profile/>
+        <div class="p-1">
+          <FindPeople/>
+        </div>
         <div class="overflow-y-auto">
           <ChatElement :class="openedDialogId==chat.id?'bg-gray-300 dark:bg-gray-800':''"
                        v-for="chat in chats" :chat="chat" @click="openDialog(chat.id)" />

@@ -2,7 +2,7 @@ from datetime import datetime
 
 from sqlalchemy import ForeignKey, UniqueConstraint, Text
 from sqlalchemy.sql.functions import func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..orm.base_model import OrmBase
 from ..orm.manager import Manager
