@@ -83,7 +83,7 @@ class RegisterUser extends LoginUser {
 
 class User {
     constructor(
-        public id: string,
+        public id: number,
         public username: string,
         public isSuperuser: boolean,
         public isStaff: boolean,

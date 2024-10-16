@@ -35,4 +35,5 @@ export class TokenService {
     }
 }
 
-export const tokenService = new TokenService();
+const tokenService = new TokenService();
+export {tokenService}

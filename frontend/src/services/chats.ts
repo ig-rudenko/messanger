@@ -1,5 +1,6 @@
 import {refreshAccessToken} from "@/services/token.refresh.ts";
 import {tokenService} from "@/services/token.service.ts";
+import api from "@/services/api.ts";
 
 enum ChatType {
     USER = "user",
@@ -20,7 +21,7 @@ export interface ChatElementType {
 export interface ChatMessageType {
     senderId: number
     recipientId: number
-    timestamp: number
+    createdAt: number
     message: string
 }
 
@@ -58,7 +59,7 @@ export class ChatService {
         return [
             {
                 type: ChatType.USER,
-                id: 1,
+                id: 2,
                 username: "alena",
                 name: "Алёна",
                 image: "https://primefaces.org/cdn/primevue/images/avatar/asiyajavayant.png",
@@ -68,7 +69,7 @@ export class ChatService {
             },
             {
                 type: ChatType.USER,
-                id: 2,
+                id: 1,
                 username: "sznachkov",
                 name: "Сергей Значков",
                 image: "https://primefaces.org/cdn/primevue/images/avatar/onyamalimba.png",
@@ -77,7 +78,7 @@ export class ChatService {
             },
             {
                 type: ChatType.USER,
-                id: 3,
+                id: 4,
                 username: "ayastremskoy",
                 name: "Александр Ястремской",
                 image: "https://primefaces.org/cdn/primevue/images/avatar/onyamalimba.png",
@@ -86,7 +87,7 @@ export class ChatService {
             },
             {
                 type: ChatType.USER,
-                id: 4,
+                id: 5,
                 username: "noc",
                 name: "ЦУС",
                 image: "https://www.gravatar.com/avatar/05dfd4b41340d09cae045235eb0893c3?d=mp",
@@ -97,44 +98,8 @@ export class ChatService {
     }
 
     async getChatMessages(chat_id: number): Promise<ChatMessageType[]> {
-        console.log(chat_id)
-        return [
-            {
-                recipientId: 5,
-                senderId: 1,
-                timestamp: 1729001441311,
-                message: "Привет ♥"
-            },
-            {
-                recipientId: 1,
-                senderId: 5,
-                timestamp: 1729001441321,
-                message: "Привет ☻♥"
-            },
-            {
-                recipientId: 5,
-                senderId: 1,
-                timestamp: 1729001441331,
-                message: "Чем занимаешься?"
-            },
-            {
-                recipientId: 1,
-                senderId: 5,
-                timestamp: 1729001441341,
-                message: "Я покушал недавно"
-            },
-            {
-                recipientId: 5,
-                senderId: 1,
-                timestamp: 1729001441351,
-                message: "Я спала, пока коты меня не разбудили"
-            },
-            {
-                recipientId: 5,
-                senderId: 1,
-                timestamp: 1729001441361,
-                message: "Сейчас буду чай пить"
-            },
-        ]
+        console.log(chat_id);
+        const resp = await api.get<ChatMessageType[]>("/subscribers/chat/"+chat_id+"/lastMessages");
+        return resp.data;
     }
 }

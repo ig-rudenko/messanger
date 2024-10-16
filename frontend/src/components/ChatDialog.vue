@@ -1,37 +1,36 @@
 <script setup lang="ts">
-import {ChatMessageType, ChatService} from "@/services/chats";
-import {ref, Ref} from "vue";
+import {ChatMessageType} from "@/services/chats";
+import {onMounted, PropType} from "vue";
 import ChatMessage from "@/components/ChatMessage.vue";
+import {scrollChatContainerToEnd} from "@/services/scroller";
+import {useStore} from "vuex";
+import {User} from "@/services/user.ts";
 
 const props = defineProps({
   chatId: {
     required: true,
     type: Number,
+  },
+  chatMessages: {
+    required: true,
+    type: Object as PropType<ChatMessageType[]>
   }
 })
 
-const currentUserId = 5
+const store = useStore()
+const user: User = store.state.auth.user!
+const currentUserId = user.id
 
-const chatService = new ChatService()
-const chatMessages: Ref<ChatMessageType[]> = ref([])
-
-function scrollToEnd() {
-  // Автопрокрутка к нижнему сообщению при открытии
-  const container = document.getElementById('messages-container')!;
-  container.scrollTop = container.scrollHeight;
-}
-
-chatService.getChatMessages(props.chatId).then(value => {
-  chatMessages.value = value;
-  setTimeout(scrollToEnd, 200)
+onMounted(() => {
+  scrollChatContainerToEnd()
 })
 
 function getMessageClasses(msg: ChatMessageType, index: number): string[] {
   let classes = []
-  if (!chatMessages.value[index - 1] || chatMessages.value[index - 1].senderId != msg.senderId) {
+  if (!props.chatMessages[index - 1] || props.chatMessages[index - 1].senderId != msg.senderId) {
     classes.push("rounded-t-2xl")
   }
-  if (!chatMessages.value[index + 1] || chatMessages.value[index + 1].senderId != msg.senderId) {
+  if (!props.chatMessages[index + 1] || props.chatMessages[index + 1].senderId != msg.senderId) {
     classes.push("rounded-b-2xl")
   }
   if (msg.senderId == currentUserId) {
@@ -46,12 +45,6 @@ function getMessageClasses(msg: ChatMessageType, index: number): string[] {
 
 <template>
   <div v-if="chatMessages" id="messages-container" class="group w-full h-full flex flex-col p-10 overflow-y-auto">
-    <template v-for="(msg, index) in chatMessages">
-      <ChatMessage :message="msg" :class="getMessageClasses(msg, index)"/>
-    </template>
-    <template v-for="(msg, index) in chatMessages">
-      <ChatMessage :message="msg" :class="getMessageClasses(msg, index)"/>
-    </template>
     <template v-for="(msg, index) in chatMessages">
       <ChatMessage :message="msg" :class="getMessageClasses(msg, index)"/>
     </template>

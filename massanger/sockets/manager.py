@@ -22,7 +22,7 @@ class RedisBroadcastManager(BroadcastManager):
         self.redis = redis
 
     async def send(self, message: MessageResponseSchema, chat_id: int):
-        await self.redis.publish(str(chat_id), message.model_dump_json())
+        await self.redis.publish(str(chat_id), message.model_dump_json(by_alias=True))
 
 
 class LocalBroadcastManager(BroadcastManager):
@@ -44,7 +44,7 @@ class ConnectionManager:
 
     async def send_message_locally(self, message: MessageResponseSchema, chat_id: int):
         for connection in self._active_connections.get(chat_id, []):
-            await connection.send_text(message.model_dump_json())
+            await connection.send_text(message.model_dump_json(by_alias=True))
 
     async def analyze_message(self, data: str, sender_user_id: int):
         try:

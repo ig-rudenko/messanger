@@ -9,16 +9,40 @@ import ChatTextInput from "@/components/ChatTextInput.vue";
 
 import {infoToast} from "@/services/my.toast";
 import WebSocketConnector from "@/services/websocket";
-import {ChatElementType, ChatService, handleMessage, RequestMessageType} from "@/services/chats";
+import {ChatElementType, ChatMessageType, ChatService, handleMessage, RequestMessageType} from "@/services/chats";
+import {scrollChatContainerToEnd} from "@/services/scroller.ts";
+import {useStore} from "vuex";
+import {User} from "@/services/user.ts";
+import router from "@/router.ts";
 
 let socket: WebSocketConnector|null = null;
+const store = useStore()
+const user: User|null = store.state.auth.user
+
+if (!user) router.push("/auth/login");
+
+const currentUserId = user?.id
 
 onMounted(() => {
   socket = new WebSocketConnector(`ws://${location.host}/ws`)
 
   socket.setOnMessage((ev: MessageEvent) => {
     handleMessage(ev.data).then(
-        msg => infoToast(msg.type, msg.message)
+        msg => {
+
+          if (msg.type == "message") {
+            console.log(msg.senderId, openedDialogId.value)
+            if (msg.senderId == openedDialogId.value) {
+              if (chatMessages.value) {
+                chatMessages.value.push(msg)
+                scrollChatContainerToEnd()
+              }
+            } else {
+              infoToast(msg.type, msg.message);
+            }
+          }
+
+        }
     )
 
   })
@@ -27,12 +51,35 @@ onMounted(() => {
 const chatService = new ChatService()
 
 const chats: Ref<ChatElementType[]> = ref([])
-const openedDialogId: Ref<number> = ref(0)
-
 chatService.getChats().then(value => chats.value = value)
 
+const chatMessages: Ref<ChatMessageType[]|null> = ref(null)
+
+const openedDialogId: Ref<number> = ref(0)
 function openDialog(id: number) {
-  openedDialogId.value = id
+  if (openedDialogId.value == id) return;
+
+  openedDialogId.value = id;
+  chatMessages.value = null;
+
+  chatService.getChatMessages(id).then(value => {
+    chatMessages.value = value;
+  })
+}
+
+
+function addMyMessageToChat(data: RequestMessageType) {
+  if (!openedDialogId.value || !chatMessages.value) return;
+
+  chatMessages.value.push(
+      {
+        message: data.message,
+        recipientId: data.recipientId,
+        senderId: currentUserId,
+        createdAt: (new Date()).getTime()
+      }
+  )
+  scrollChatContainerToEnd()
 }
 
 function sendMessage(text: string) {
@@ -42,7 +89,10 @@ function sendMessage(text: string) {
     recipientId: openedDialogId.value,
     message: text
   }
-  if (socket) socket.sendMessage(data)
+  if (socket) {
+    socket.sendMessage(data);
+    addMyMessageToChat(data);
+  }
 }
 
 </script>
@@ -58,8 +108,8 @@ function sendMessage(text: string) {
         </div>
       </SplitterPanel>
       <SplitterPanel class="flex items-center flex-col justify-center" :size="75">
-        <template v-if="openedDialogId">
-          <ChatDialog :chat-id="openedDialogId" />
+        <template v-if="openedDialogId && chatMessages !== null">
+          <ChatDialog :chat-id="openedDialogId" :chatMessages="chatMessages" />
           <ChatTextInput @sendMessage="sendMessage"/>
         </template>
       </SplitterPanel>

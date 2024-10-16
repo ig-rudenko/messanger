@@ -20,7 +20,7 @@ function verboseDatetime(timestamp: number): string {
 <template>
   <div class="m-1 p-3 rounded w-fit">
     <div class="pb-2">{{ message.message }}</div>
-    <div class="text-sm font-light">{{ verboseDatetime(message.timestamp) }}</div>
+    <div class="text-sm font-light">{{ verboseDatetime(message.createdAt) }}</div>
   </div>
 </template>
 

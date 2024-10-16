@@ -18,7 +18,7 @@ export default class WebSocketConnector {
     }
 
     private reconnect() {
-        console.log('RECONNECTING')
+        // console.log('RECONNECTING')
         this.connecting = true;
         this.socket = new WebSocket(this.url);
         this.socket.onopen = () => this.onOpen();
@@ -26,7 +26,7 @@ export default class WebSocketConnector {
     }
 
     private onOpen() {
-        console.log("OPEN!!!",this.messageCallback)
+        // console.log("OPEN!!!",this.messageCallback)
         this.connecting = false
 
         if (this.messageCallback) this.setOnMessage(this.messageCallback);
@@ -42,7 +42,7 @@ export default class WebSocketConnector {
     }
 
     private onClose() {
-        console.log("CLOSE")
+        // console.log("CLOSE")
         this.reconnectIfFail();
     }
 
@@ -52,7 +52,7 @@ export default class WebSocketConnector {
     }
 
     reconnectIfFail() {
-        console.log("reconnectIfFail")
+        // console.log("reconnectIfFail")
         if (this.connecting) {
             console.log("already connecting")
             setTimeout(this.reconnectIfFail, this.reconnectionTimeout);

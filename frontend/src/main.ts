@@ -20,7 +20,9 @@ import Textarea from "primevue/textarea";
 import Aura from './presets/aura';
 import router from "./router.ts";
 import store from "@/store";
+import setupInterceptors from "@/services/setupInterceptors.ts";
 
+setupInterceptors(store);
 export const app = createApp(App);
 app.use(PrimeVue, {
     unstyled: true,

@@ -3,6 +3,7 @@ import UserService from "@/services/user.service";
 import {tokenService} from "@/services/token.service";
 import {createNewUser, LoginUser, RegisterUser, User, UserTokens} from "@/services/user";
 import api from "@/services/api";
+import router from "@/router";
 
 class Status {
     constructor(
@@ -70,10 +71,11 @@ export const auth = {
             api.get("/auth/myself")
                 .then(
                     resp => {
-                        const user = createNewUser(resp.data)
-                        UserService.setUser(user)
-                        state.user = user
-                        state.userTokens = tokenService.getUserTokens()
+                        const user = createNewUser(resp.data);
+                        UserService.setUser(user);
+                        state.user = user;
+                        state.userTokens = tokenService.getUserTokens();
+                        router.push("/");
                     }
                 )
         },

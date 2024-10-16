@@ -36,9 +36,7 @@ export default defineComponent({
       this.login(this.user)
           .then(
               (value: AxiosResponse|AxiosError) => {
-                if (value.status == 200) {
-                  this.$router.push("/");
-                } else {
+                if (value.status != 200) {
                   this.userError = (<AxiosError>value).message
                 }
               },
