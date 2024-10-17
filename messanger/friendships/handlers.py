@@ -37,8 +37,9 @@ async def delete_friendship_api_view(
 
 @router.get("/search", response_model=list[FriendshipEntitySchema])
 async def search_chat_entities_api_view(
-    search: str = Query(..., min_length=3, max_length=100),
+    search: str = Query("", max_length=100),
+    entity_id: int | None = Query(None),
     _=Depends(get_current_user),
     session=Depends(get_session),
 ):
-    return await search_chat_entities(session, search)
+    return await search_chat_entities(session, search, entity_id)

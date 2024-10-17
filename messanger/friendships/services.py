@@ -28,8 +28,8 @@ async def get_user_friendships(session: AsyncSession, user_id: int) -> list[Exis
                 username=row[1],
                 first_name=row[2],
                 last_name=row[3],
-                last_message=last_message[0].message,
-                last_datetime=last_message[0].created_at,
+                last_message=last_message[0].message if last_message else None,
+                last_datetime=last_message[0].created_at if last_message else None,
             )
         )
 
@@ -67,10 +67,17 @@ async def delete_friendship(session: AsyncSession, user_id: int, friend_username
         await friendship.delete(session)
 
 
-async def search_chat_entities(session: AsyncSession, search: str) -> list[FriendshipEntitySchema]:
-    result = await session.execute(
-        select(User.id, User.username, User.first_name, User.last_name).where(User.username.contains(search))
-    )
+async def search_chat_entities(
+    session: AsyncSession, search: str, entity_id: int | None = None
+) -> list[FriendshipEntitySchema]:
+    query = select(User.id, User.username, User.first_name, User.last_name)
+
+    if entity_id is not None:
+        query = query.where(User.id == entity_id)
+    if len(search) > 3:
+        query = query.where(User.username.contains(search))
+
+    result = await session.execute(query)
 
     return [
         FriendshipEntitySchema(

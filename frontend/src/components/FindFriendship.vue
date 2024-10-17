@@ -47,10 +47,13 @@ function clickFriendship(username: string) {
   </div>
 
   <div class="overflow-y-auto">
-    <FriendshipEntityRow v-for="friendship in newFriendships" :data="friendship"
-                         v-tooltip="isAlreadyHasFriendship(friendship.id)?'':'Дружить'"
-                         @click="() => clickFriendship(friendship.username)"
-                         class="hover:ring-2 ring-inset" />
+    <div v-for="friendship in newFriendships" class="relative group">
+      <FriendshipEntityRow :data="friendship"
+                           v-tooltip="isAlreadyHasFriendship(friendship.id)?'Открыть чат':'Дружить'"
+                           @click="() => clickFriendship(friendship.username)"
+                           class="hover:ring-2 ring-inset" />
+      <i v-if="!isAlreadyHasFriendship(friendship.id)" class="pi pi-user-plus absolute right-5 top-8"/>
+    </div>
   </div>
 
   <Dialog v-model:visible="visible" modal header="Edit Profile" pt:root:class="!border-0 !bg-transparent"

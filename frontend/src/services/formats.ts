@@ -7,7 +7,7 @@ export function verboseDatetime(timestamp: number): string {
 
     const hour = dateObject.toLocaleString("ru-RU", {hour: "2-digit"});
     let minute = dateObject.toLocaleString("ru-RU", {minute: "2-digit"});
-    if (minute.length == 1) minute += "0";
+    if (minute.length == 1) minute = "0" + minute;
 
     // Если дате сегодняшняя, то возвращаем только время.
     if (currentDate.getDate() == dateObject.getDate()) {
@@ -22,4 +22,14 @@ export function verboseDatetime(timestamp: number): string {
     }
 
     return dateObject.toLocaleString("ru-RU")
+}
+
+export function getAvatar(username: string, image?: string, size: number = 64) {
+    if (image) return image;
+    return `https://ui-avatars.com/api/?size=${size}&name=${username}&font-size=0.33&background=random&rounded=true`
+}
+
+export function textToHtml(text: string): string {
+    const r = /\n/g
+    return text.replace(r, "<br>")
 }

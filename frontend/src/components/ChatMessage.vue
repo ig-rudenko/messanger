@@ -2,7 +2,7 @@
 import {PropType} from "vue";
 
 import {ChatMessageType} from "@/services/chats";
-import {verboseDatetime} from "@/services/formats";
+import {textToHtml, verboseDatetime} from "@/services/formats";
 
 defineProps({
   message: {
@@ -11,10 +11,6 @@ defineProps({
   }
 })
 
-function textToHtml(text: string): string {
-  const r = /\n/g
-  return text.replace(r, "<br>")
-}
 
 </script>
 

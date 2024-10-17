@@ -5,6 +5,7 @@ import {getCurrentTheme, setAutoTheme, setDarkTheme, setLightTheme, ThemesValues
 import {useStore} from "vuex";
 import {User} from "@/services/user.ts";
 import router from "@/router.ts";
+import {getAvatar} from "@/services/formats.ts";
 
 const currentTheme: Ref<ThemesValues> = ref(getCurrentTheme())
 
@@ -32,11 +33,14 @@ function logout() {
   <div v-if="user"
       class="p-3 border-b-2 dark:border-gray-900 flex flex-wrap justify-between items-center gap-4 bg-gray-300 dark:bg-gray-700">
     <div class="flex flex-wrap items-center gap-4">
-      <Avatar image="https://primefaces.org/cdn/primevue/images/organization/walter.jpg" class="mr-2" size="xlarge"
+      <Avatar :image="getAvatar(user.username, '', 128)" class="mr-2" size="xlarge"
               shape="circle"/>
       <div>
         <div class="py-1 text-xl font-semibold">{{ user.firstName }} {{ user.lastName }}</div>
-        <div class="text-sm font-mono">{{user.username}}</div>
+        <div class="text-sm font-mono">
+          <span class='text-xs text-surface-500 dark:text-surface-400 font-mono pr-1'>id:</span>
+          <span class="select-all cursor-pointer">{{user.username}}</span>
+        </div>
       </div>
     </div>
     <div>

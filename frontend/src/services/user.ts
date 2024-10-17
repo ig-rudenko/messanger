@@ -1,4 +1,10 @@
-import {validateEmail, validatePassword, validateTwoPasswords, validateUsername} from "./validators.ts";
+import {
+    validateEmail,
+    validateFirstLastName,
+    validatePassword,
+    validateTwoPasswords,
+    validateUsername
+} from "./validators.ts";
 
 class LoginUserIsValid {
     username: boolean = true
@@ -25,20 +31,34 @@ class LoginUserIsValid {
 class RegisterUserIsValid extends LoginUserIsValid {
     email: boolean = true
     emailError: string = ""
+    firstName: boolean = true
+    firstNameError: string = ""
+    lastName: boolean = true
+    lastNameError: string = ""
 
     validateEmail(value: string): void {
         this.emailError = validateEmail(value)
         this.email = this.emailError.length == 0;
     }
 
+    validateFirstName(value?: string): void {
+        this.firstNameError = validateFirstLastName(value)
+        this.firstName = this.firstNameError.length == 0;
+    }
+
+    validateLastName(value?: string): void {
+        this.lastNameError = validateFirstLastName(value)
+        this.lastName = this.lastNameError.length == 0;
+    }
+
     validatePasswordPair(pass1: string, pass2: string) {
         this.validatePassword(pass1)
-        this.passwordError += validateTwoPasswords(pass1, pass2);
+        this.passwordError = validateTwoPasswords(pass1, pass2);
         this.password = this.passwordError.length == 0;
     }
 
     get isValid(): boolean {
-        return this.username && this.password && this.email;
+        return this.username && this.password && this.email && this.lastName && this.firstName;
     }
 }
 
@@ -64,7 +84,8 @@ class LoginUser {
 class RegisterUser extends LoginUser {
     email: string = ""
     password2: string = ""
-    recaptchaToken: string = ""
+    firstName?: string
+    lastName?: string
     readonly valid: RegisterUserIsValid
 
     constructor() {
@@ -76,6 +97,8 @@ class RegisterUser extends LoginUser {
         this.valid.validateUsername(this.username)
         this.valid.validateEmail(this.email)
         this.valid.validatePasswordPair(this.password, this.password2)
+        this.valid.validateFirstName(this.firstName)
+        this.valid.validateLastName(this.lastName)
         return this.valid.isValid
     }
 

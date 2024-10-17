@@ -29,7 +29,7 @@ def create_jwt_token_pair(user_id: int) -> TokenPair:
     """
     access_token = _create_jwt_token(
         {USER_IDENTIFIER: user_id, "type": "access"},
-        timedelta(seconds=2),
+        timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
     )
     refresh_token = _create_jwt_token(
         {USER_IDENTIFIER: user_id, "type": "refresh"},

@@ -29,12 +29,7 @@ class AuthService {
     }
 
     register(user: RegisterUser) {
-        return api.post("/auth/users", {
-            username: user.username,
-            email: user.email,
-            password: user.password,
-            recaptchaToken: user.recaptchaToken,
-        });
+        return api.post("/auth/users", user);
     }
 }
 

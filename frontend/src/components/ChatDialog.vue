@@ -56,10 +56,12 @@ function getMessageClasses(msg: ChatMessageType, index: number): string[] {
 </script>
 
 <template>
-  <div v-if="chatMessages" id="messages-container" class="group w-full h-full flex flex-col p-10 overflow-y-auto">
-    <template v-for="(msg, index) in chatMessages">
-      <ChatMessage :message="msg" :class="getMessageClasses(msg, index)"/>
-    </template>
+  <div v-if="chatMessages" class="group w-full h-full flex flex-col-reverse overflow-y-auto">
+    <div id="messages-container" class="group flex flex-col p-10 ">
+      <template v-for="(msg, index) in chatMessages">
+        <ChatMessage :message="msg" :class="getMessageClasses(msg, index)"/>
+      </template>
+    </div>
   </div>
 </template>
 

@@ -28,12 +28,13 @@ export default defineComponent({
   methods: {
     ...mapActions("auth", ["register"]),
 
-    getClassesFor(isValid: boolean): string[] {
-      return isValid ? ['w-full', 'pb-3'] : ['w-full', 'pb-3', 'p-invalid']
+    getClassesFor(isValid: boolean): string {
+      return isValid ? '' : '!border-red-500'
     },
     handleRegister() {
+      if (!this.user.isValid) return
       this.register(this.user)
-          .then(() => this.$router.push("/login"))
+          .then(() => this.$router.push("/auth/login"))
           .catch((reason: AxiosError<any>) => this.userError = getVerboseAxiosError(reason));
     },
 
@@ -48,39 +49,66 @@ export default defineComponent({
       <router-link to="/auth/login" class="font-medium no-underline ml-2 text-blue-500 cursor-pointer">У меня уже есть аккаунт</router-link>
     </div>
 
-    <div>
+    <div class="flex flex-col gap-3">
       <div v-if="userError" class="flex justify-center pb-4">
-        <Message @click="userError = ''" severity="error" icon="pi pi-exclamation-triangle"><span v-html="userError"></span></Message>
+        <Message class="select-none cursor-pointer" @click="userError = ''" severity="error" icon="pi pi-exclamation-triangle"><span v-html="userError"></span></Message>
       </div>
 
-      <div class="mb-5">
-        <FloatLabel>
-          <InputText @keydown.enter="handleRegister" v-model="user.username" id="username-input" type="text" autofocus :class="getClassesFor(user.valid.username)" />
-          <label for="username-input" class="block text-900 mb-2">Username</label>
-        </FloatLabel>
-        <Message v-if="!user.valid.username" severity="error">{{user.valid.usernameError}}</Message>
+      <div>
+<!--        USERNAME-->
+        <InputText placeholder="Имя пользователя" @keydown.enter="handleRegister" v-model="user.username"
+                   class="w-full !border-gray-400"
+                   id="username-input" type="text" autofocus :class="getClassesFor(user.valid.username)" />
+        <div class="px-1">
+          <Message v-if="!user.valid.username" class="mt-1" severity="error"><span class="text-sm">{{user.valid.usernameError}}</span></Message>
+        </div>
       </div>
 
-      <div class="mb-5">
-        <FloatLabel>
-          <InputText @keydown.enter="handleRegister" v-model="user.email" id="email-input" type="text" :class="getClassesFor(user.valid.email)" />
-          <label for="email-input" class="block text-900 mb-2">Email</label>
-        </FloatLabel>
-        <Message v-if="!user.valid.email" severity="error">{{user.valid.emailError}}</Message>
+      <div class="grid grid-cols-2 gap-1">
+        <div>
+<!--          FIRST NAME-->
+          <InputText placeholder="Имя" @keydown.enter="handleRegister" v-model="user.firstName"
+                     class="w-full"
+                     id="username-input" type="text" autofocus :class="getClassesFor(user.valid.firstName)" />
+          <div class="px-1">
+            <Message v-if="!user.valid.firstName" class="mt-1" severity="error"><span class="text-sm">{{user.valid.usernameError}}</span></Message>
+          </div>
+        </div>
+        <div>
+<!--          LAST NAME-->
+          <InputText placeholder="Фамилия" @keydown.enter="handleRegister" v-model="user.lastName"
+                     class="w-full"
+                     id="username-input" type="text" autofocus :class="getClassesFor(user.valid.lastName)" />
+          <div class="px-1">
+            <Message v-if="!user.valid.lastName" class="mt-1" severity="error"><span class="text-sm">{{user.valid.usernameError}}</span></Message>
+          </div>
+        </div>
       </div>
 
-      <div class="mb-5">
-        <FloatLabel>
-          <InputText @keydown.enter="handleRegister" v-model="user.password" id="password1-input" type="password" :class="getClassesFor(user.valid.password)" />
-          <label for="password1-input" class="block text-900 mb-2">Password</label>
-        </FloatLabel>
-        <Message v-if="!user.valid.password" severity="error">{{user.valid.passwordError}}</Message>
+      <div>
+<!--        EMAIL-->
+        <InputText placeholder="E-mail" @keydown.enter="handleRegister" v-model="user.email"
+                   class="w-full !border-gray-400"
+                   id="email-input" type="text" :class="getClassesFor(user.valid.email)" />
+        <div class="px-1">
+          <Message v-if="!user.valid.email" class="mt-1" severity="error"><span class="text-sm">{{user.valid.emailError}}</span></Message>
+        </div>
       </div>
 
-      <FloatLabel class="mb-5">
-        <InputText @keydown.enter="handleRegister" v-model="user.password2" id="password2-input" type="password" :class="getClassesFor(user.valid.password)" />
-        <label for="password2-input" class="block text-900 mb-2">Confirm password</label>
-      </FloatLabel>
+      <div>
+<!--        PASSWORD-->
+        <InputText placeholder="Пароль" @keydown.enter="handleRegister" v-model="user.password"
+                   class="w-full !border-gray-400"
+                   id="password1-input" type="password" :class="getClassesFor(user.valid.password)" />
+        <div class="px-1">
+          <Message v-if="!user.valid.password" class="mt-1" severity="error"><span class="text-sm">{{user.valid.passwordError}}</span></Message>
+        </div>
+      </div>
+
+<!--      CONFIRM-->
+      <InputText placeholder="Повторите пароль" @keydown.enter="handleRegister" v-model="user.password2"
+                 class="w-full !border-gray-400"
+                 id="password2-input" type="password" :class="getClassesFor(user.valid.password)" />
 
       <Button label="Зарегистрироваться" icon="pi pi-user" severity="info" @click="handleRegister" class="w-full"></Button>
     </div>

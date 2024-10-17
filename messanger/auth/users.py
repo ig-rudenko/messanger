@@ -2,7 +2,7 @@ import re
 from typing import Optional
 
 from fastapi import Depends, Header, HTTPException
-from sqlalchemy.exc import NoResultFound
+from sqlalchemy.exc import NoResultFound, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .models import User
@@ -56,22 +56,28 @@ async def get_user_or_none(
 
 
 async def create_user(session: AsyncSession, user: UserCreateSchema) -> User:
-    user_data = user.model_dump()
-    user_data["password"] = encrypt_password(user_data["password"])
     obj = User(
-        username=user_data["username"],
-        email=user_data["email"],
-        password=user_data["password"],
+        username=user.username,
+        email=user.email,
+        password=encrypt_password(user.password),
+        last_name=user.last_name,
+        first_name=user.first_name,
     )
     session.add(obj)
-    await session.commit()
-    await session.refresh(obj)
-    return obj
+    try:
+        await session.commit()
+    except IntegrityError as exc:
+        if match := re.search(r"UNIQUE constraint failed: users\.(\S+)", str(exc)):
+            raise HTTPException(
+                status_code=422, detail=f"Пользователь с таким `{match.group(1)}` уже существует"
+            )
+        raise exc
+    else:
+        await session.refresh(obj)
+        return obj
 
 
-async def get_user_by_credentials(
-    session: AsyncSession, username: str, password: str
-) -> User:
+async def get_user_by_credentials(session: AsyncSession, username: str, password: str) -> User:
     try:
         user_model = await User.get(session, username=username)
     except NoResultFound:

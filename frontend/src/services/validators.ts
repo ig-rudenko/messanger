@@ -29,3 +29,8 @@ export function validateTwoPasswords(val1: string, val2: string): string {
     }
     return validatePassword(val1);
 }
+
+export function validateFirstLastName(value?: string): string {
+    if (value && value.length > 150) return "Укажите не более 150 символов"
+    return "";
+}

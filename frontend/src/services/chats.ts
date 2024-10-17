@@ -1,6 +1,7 @@
 import {refreshAccessToken} from "@/services/token.refresh";
 import {tokenService} from "@/services/token.service";
 import api from "@/services/api";
+import {ref, Ref} from "vue";
 
 export interface ChatMessageType {
     senderId: number
@@ -35,18 +36,22 @@ export async function handleMessage(data: any): Promise<ResponseMessageType> {
 
 
 export class ChatService {
-    public chats: Map<number, ChatMessageType[]>
+    private _chats: Ref<Map<number, ChatMessageType[]>>
 
     constructor() {
-        this.chats = new Map();
+        this._chats = ref(new Map());
+    }
+
+    get chats() {
+        return this._chats.value
     }
 
     getStoredChat(chat_id: number): ChatMessageType[] {
         return this.chats.get(chat_id) || []
     }
 
-    saveChat(chat_id: number, messages: ChatMessageType[]) {
-        this.chats.set(chat_id, messages)
+    appendMessageToChat(chat_id: number, message: ChatMessageType) {
+        this.getStoredChat(chat_id).push(message)
     }
 
     async getLastChatMessages(chat_id: number): Promise<ChatMessageType[]> {
