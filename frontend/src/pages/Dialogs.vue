@@ -150,7 +150,7 @@ function sendMessage(text: string) {
 
       <SplitterPanel class="flex flex-col relative" :size="25" :minSize="20">
         <div>
-          <Profile/>
+          <Profile :is-connected="socket?.isConnected.value"/>
         </div>
         <div class="p-1">
           <FindFriendship @gotFriendship="gotFriendship" @selectedFriendship="selectedFriendship" />

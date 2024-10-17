@@ -1,6 +1,7 @@
 import {tokenService} from "@/services/token.service.ts";
 import {errorToast} from "@/services/my.toast.ts";
 import {RequestMessageType} from "@/services/chats.ts";
+import {Ref, ref} from "vue";
 
 
 export default class WebSocketConnector {
@@ -8,6 +9,7 @@ export default class WebSocketConnector {
     private readonly url: string
     private readonly reconnectionTimeout: number = 1000 //ms
     private connecting: boolean = true
+    public isConnected: Ref<boolean>
     private messageCallback?: (ev: MessageEvent<any>) => any = undefined
 
     constructor(url: string) {
@@ -15,6 +17,7 @@ export default class WebSocketConnector {
         this.socket = new WebSocket(url);
         this.socket.onopen = () => this.onOpen();
         this.socket.onerror = () => this.onError();
+        this.isConnected = ref(false)
     }
 
     private reconnect() {
@@ -27,7 +30,8 @@ export default class WebSocketConnector {
 
     private onOpen() {
         // console.log("OPEN!!!",this.messageCallback)
-        this.connecting = false
+        this.connecting = false;
+        this.isConnected.value = true;
 
         if (this.messageCallback) this.setOnMessage(this.messageCallback);
 
@@ -53,6 +57,7 @@ export default class WebSocketConnector {
 
     reconnectIfFail() {
         // console.log("reconnectIfFail")
+        this.isConnected.value = false;
         if (this.connecting) {
             console.log("already connecting")
             setTimeout(this.reconnectIfFail, this.reconnectionTimeout);
