@@ -26,18 +26,30 @@ onMounted(() => {
 })
 
 function getMessageClasses(msg: ChatMessageType, index: number): string[] {
-  let classes = []
+  let classes: string[] = []
+
+  // Если сообщение от другого пользователя,
   if (!props.chatMessages[index - 1] || props.chatMessages[index - 1].senderId != msg.senderId) {
-    classes.push("rounded-t-2xl")
+    classes.push("rounded-t-xl")
   }
   if (!props.chatMessages[index + 1] || props.chatMessages[index + 1].senderId != msg.senderId) {
-    classes.push("rounded-b-2xl")
+    classes.push("rounded-b-xl")
   }
   if (msg.senderId == currentUserId) {
     classes.push(...["self-end", "bg-gray-200", "dark:bg-gray-700"])
   } else {
     classes.push(...["bg-indigo-200", "dark:bg-indigo-900"])
   }
+
+  // Если время между предыдущим сообщением и текущим больше 100 сек, добавляем скругление.
+  if (props.chatMessages[index - 1] && props.chatMessages[index].createdAt > (props.chatMessages[index - 1].createdAt + 100)) {
+    classes.push(...["rounded-t-xl"])
+  }
+  // Если время между последующим сообщением и текущим больше 100 сек, добавляем отступ и скругление.
+  if (props.chatMessages[index + 1] && props.chatMessages[index + 1].createdAt > (props.chatMessages[index].createdAt + 100)) {
+    classes.push(...["mb-10", "rounded-b-xl"])
+  }
+
   return classes
 }
 

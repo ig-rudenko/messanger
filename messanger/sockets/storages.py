@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..orm.session_manager import db_manager
 from .schemas import MessageResponseSchema
-from ..subscribers.models import Message
+from ..chats.models import Message
 
 
 class MessagesStorage(ABC):

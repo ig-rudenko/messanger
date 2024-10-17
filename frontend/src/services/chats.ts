@@ -2,23 +2,6 @@ import {refreshAccessToken} from "@/services/token.refresh";
 import {tokenService} from "@/services/token.service";
 import api from "@/services/api";
 
-enum ChatType {
-    USER = "user",
-    GROUP = "group"
-}
-
-export interface ChatElementType {
-    id: number
-    username: string
-    firstName: string
-    lastName: string
-    image?: string
-    lastMessage?: string
-    lastDatetime?: string
-    type: ChatType
-    online?: boolean
-}
-
 export interface ChatMessageType {
     senderId: number
     recipientId: number
@@ -52,14 +35,25 @@ export async function handleMessage(data: any): Promise<ResponseMessageType> {
 
 
 export class ChatService {
+    public chats: Map<number, ChatMessageType[]>
 
-    async getChats(): Promise<ChatElementType[]> {
-        const resp = await api.get<ChatElementType[]>("/subscribers");
-        return resp.data;
+    constructor() {
+        this.chats = new Map();
     }
 
-    async getChatMessages(chat_id: number): Promise<ChatMessageType[]> {
-        const resp = await api.get<ChatMessageType[]>("/subscribers/chat/"+chat_id+"/lastMessages");
+    getStoredChat(chat_id: number): ChatMessageType[] {
+        return this.chats.get(chat_id) || []
+    }
+
+    saveChat(chat_id: number, messages: ChatMessageType[]) {
+        this.chats.set(chat_id, messages)
+    }
+
+    async getLastChatMessages(chat_id: number): Promise<ChatMessageType[]> {
+        const resp = await api.get<ChatMessageType[]>("/chats/"+chat_id+"/lastMessages");
+        this.chats.set(chat_id, resp.data);
         return resp.data;
     }
 }
+
+export const chatService = new ChatService();

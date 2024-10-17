@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Optional
 
 from sqlalchemy import String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql.expression import false, true
 from sqlalchemy.sql.functions import func
 
@@ -24,3 +24,6 @@ class User(OrmBase, Manager):
     is_staff: Mapped[bool] = mapped_column(server_default=false())
     is_active: Mapped[bool] = mapped_column(server_default=true())
     date_join: Mapped[datetime] = mapped_column(server_default=func.now())
+
+    my_friends = relationship("Friendship", foreign_keys="[Friendship.user_id]", backref="user")
+    friends_of = relationship("Friendship", foreign_keys="[Friendship.friend_id]", backref="friend")

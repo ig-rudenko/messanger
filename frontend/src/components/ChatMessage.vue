@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import {PropType} from "vue";
-import {ChatMessageType} from "@/services/chats.ts";
+
+import {ChatMessageType} from "@/services/chats";
+import {verboseDatetime} from "@/services/formats";
 
 defineProps({
   message: {
@@ -8,13 +10,6 @@ defineProps({
     type: Object as PropType<ChatMessageType>
   }
 })
-
-function verboseDatetime(timestamp: number): string {
-  // multiplied by 1000 so that the argument is in milliseconds, not seconds
-  const milliseconds = new Date(timestamp * 1000);
-  const dateObject = new Date(milliseconds)
-  return dateObject.toLocaleString("ru-RU")
-}
 
 function textToHtml(text: string): string {
   const r = /\n/g
@@ -24,7 +19,7 @@ function textToHtml(text: string): string {
 </script>
 
 <template>
-  <div class="m-1 p-3 rounded w-fit">
+  <div class="m-1 p-3 rounded w-fit max-w-xl">
     <div class="pb-2"><span v-html="textToHtml(message.message)"></span></div>
     <div class="text-sm font-light">{{ verboseDatetime(message.createdAt) }}</div>
   </div>

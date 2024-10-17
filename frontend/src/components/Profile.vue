@@ -35,7 +35,8 @@ function logout() {
       <Avatar image="https://primefaces.org/cdn/primevue/images/organization/walter.jpg" class="mr-2" size="xlarge"
               shape="circle"/>
       <div>
-        <div class="text-xl font-semibold">{{ user.firstName }} {{ user.lastName }}</div>
+        <div class="py-1 text-xl font-semibold">{{ user.firstName }} {{ user.lastName }}</div>
+        <div class="text-sm font-mono">{{user.username}}</div>
       </div>
     </div>
     <div>

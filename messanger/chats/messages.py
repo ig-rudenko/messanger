@@ -1,8 +1,8 @@
 from sqlalchemy import select, or_, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from massanger.sockets.schemas import MessageResponseSchema
-from .models import Message
+from messanger.sockets.schemas import MessageResponseSchema
+from messanger.chats.models import Message
 
 
 async def get_last_messages(
@@ -17,7 +17,7 @@ async def get_last_messages(
             )
         )
         .distinct(Message.id)
-        .order_by(Message.created_at.asc())
+        .order_by(Message.created_at.desc())
         .limit(limit)
     )
 
@@ -25,7 +25,7 @@ async def get_last_messages(
 
     result = await session.execute(query)
 
-    return [
+    messages = [
         MessageResponseSchema(
             type="message",
             status="stored",
@@ -36,3 +36,5 @@ async def get_last_messages(
         )
         for msg in result.scalars()
     ]
+
+    return list(reversed(messages))

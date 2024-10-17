@@ -16,13 +16,14 @@ if config.config_file_name is not None:
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-from massanger.orm.base_model import OrmBase
-from massanger.auth.models import User
-from massanger.subscribers.models import Friendship
+from messanger.orm.base_model import OrmBase
+from messanger.auth.models import User
+from messanger.friendships.models import Friendship
+from messanger.chats.models import Message
 
 target_metadata = OrmBase.metadata
 
-print(f"Loading model ", User, Friendship)
+print(f"Loading model ", User.__class__.__name__, Friendship.__class__.__name__, Message.__class__.__name__)
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
