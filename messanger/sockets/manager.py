@@ -11,6 +11,7 @@ from .schemas import MessageRequestSchema, MessageResponseSchema
 from .status import set_user_online, set_user_offline, is_user_online
 from .storages import MessagesStorage, NoMessagesStorage, DatabaseDirectMessagesStorage
 from ..cache import AbstractCache, get_cache
+from ..chats.messages import update_last_message
 from ..friendships.services import get_user_friendships
 from ..orm.session_manager import db_manager
 from ..settings import settings
@@ -106,6 +107,8 @@ class ConnectionManager:
                 )
                 # Сначала отправляем.
                 await self.broadcast(response, msg.recipient_id)
+                # Перезаписываем в кеш.
+                await update_last_message(response, self._cache)
                 # Затем обрабатываем сохранение.
                 await self._storage.process_message(response)
 

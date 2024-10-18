@@ -56,8 +56,8 @@ function getMessageClasses(msg: ChatMessageType, index: number): string[] {
 </script>
 
 <template>
-  <div v-if="chatMessages" class="group w-full h-full flex flex-col-reverse overflow-y-auto">
-    <div id="messages-container" class="group flex flex-col p-10 ">
+  <div id="chat-dialog" v-if="chatMessages" class="w-full h-full flex flex-col-reverse overflow-y-auto">
+    <div id="messages-container" class="group flex flex-col p-2 sm:p-10">
       <template v-for="(msg, index) in chatMessages">
         <ChatMessage :message="msg" :class="getMessageClasses(msg, index)"/>
       </template>
@@ -66,34 +66,46 @@ function getMessageClasses(msg: ChatMessageType, index: number): string[] {
 </template>
 
 <style scoped>
-::-webkit-scrollbar {
+#chat-dialog::-webkit-scrollbar {
   display: inline;
-  width: 7px;
+  width: 6px;
   height: 5px;
 }
-::-webkit-scrollbar-track-piece {
-  background-color: var(--p-surface-900);
+
+#chat-dialog::-webkit-scrollbar-track-piece {
+  background-color: var(--p-surface-0);
   border-radius: 20px;
   opacity: 0.2;
 }
-.group:hover::-webkit-scrollbar-track-piece {
+#chat-dialog:hover::-webkit-scrollbar-track-piece {
+  background-color: var(--p-surface-200);
+}
+#chat-dialog::-webkit-scrollbar-thumb {
+  background-color: var(--p-surface-0);
+}
+#chat-dialog:hover::-webkit-scrollbar-thumb {
+  background-color: var(--p-surface-400);
+  border-radius: 20px;
+  height: 4px;
+}
+#chat-dialog::-webkit-scrollbar-thumb:hover {
+  background-color: var(--p-surface-800);
+}
+
+
+#chat-dialog:where(.dark, .dark *)::-webkit-scrollbar-track-piece {
+  background-color: var(--p-surface-900);
+}
+#chat-dialog:where(.dark, .dark *):hover::-webkit-scrollbar-track-piece {
   background-color: var(--p-surface-600);
-  border-radius: 20px;
-  opacity: 0.2;
 }
-::-webkit-scrollbar-thumb {
+#chat-dialog:where(.dark, .dark *)::-webkit-scrollbar-thumb {
   background-color: var(--p-surface-900);
-  border-radius: 20px;
-  height: 4px;
 }
-
-.group:hover::-webkit-scrollbar-thumb {
+#chat-dialog:where(.dark, .dark *):hover::-webkit-scrollbar-thumb {
   background-color: var(--p-surface-800);
-  border-radius: 20px;
-  height: 4px;
 }
-
-::-webkit-scrollbar-thumb:hover {
-  background-color: var(--p-surface-800);
+#chat-dialog:where(.dark, .dark *)::-webkit-scrollbar-thumb:hover {
+  background-color: var(--p-surface-400);
 }
 </style>

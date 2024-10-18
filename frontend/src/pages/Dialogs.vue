@@ -19,6 +19,8 @@ import {ChatMessageType, chatService, handleMessage, RequestMessageType, Respons
 import {getAvatar} from "@/services/formats";
 
 // -------------------------------------------------------
+const isMobile: Ref<boolean> = ref(window.innerWidth < 640);
+const showMobileMenu: Ref<boolean> = ref(true);
 let user: User|null = null;
 let socket: WebSocketConnector|null = null;
 let currentUserId: number|null = null;
@@ -45,7 +47,7 @@ async function notifyAboutNewMessage(message: ResponseMessageType) {
 
   messageFrom = `${from?.firstName||''} ${from?.lastName||''}`;
   messageFromAvatar = from?.image || "";
-  newMessageToast(message.senderId, messageFrom, message.message, getAvatar(from.username, messageFromAvatar))
+  newMessageToast(message.senderId, messageFrom, message.message, getAvatar(from.username, messageFromAvatar), 5000)
 }
 
 onMounted(() => {
@@ -54,6 +56,8 @@ onMounted(() => {
   if (!user) router.push("/auth/login");
 
   currentUserId = user?.id || null;
+
+  window.addEventListener("resize", () => {isMobile.value = window.innerWidth < 640 });
 
   socket = new WebSocketConnector(`ws://${location.host}/ws`);
   socket.setOnMessage((ev: MessageEvent) => {
@@ -67,8 +71,11 @@ onMounted(() => {
             // Если открыт диалог с этим пользователем.
             if (msg.senderId == openedDialogId.value) {
               scrollChatContainerToEnd();
-            } else {
-              // Отображаем всплывающее оповещение.
+            }
+
+            // Отображаем всплывающее оповещение.
+            // Если не открыт диалог с этим пользователем, либо мобильная версия с открытым меню.
+            if ((!isMobile.value && msg.senderId != openedDialogId.value) || (isMobile.value && showMobileMenu.value)) {
               notifyAboutNewMessage(msg);
             }
           }
@@ -99,6 +106,12 @@ function selectedFriendship(friendship: FriendshipEntityType) {
 
 // Обработка открытия диалога конкретного чата
 function openDialog(chat_id: number) {
+  // Выключаем мобильное окно.
+  showMobileMenu.value = false;
+
+  // Фокус на поле ввода.
+  document.getElementById("chat-input")?.focus();
+
   if (openedDialogId.value == chat_id) return;
 
   openedDialogId.value = chat_id;
@@ -106,7 +119,7 @@ function openDialog(chat_id: number) {
   chatMessages.value = chatService.getStoredChat(chat_id);
   scrollChatContainerToEnd();
 
-  // Заправшиваем у сервера последние сообщения.
+  // Запрашиваем у сервера последние сообщения.
   chatService.getLastChatMessages(chat_id).then(value => {
     chatMessages.value = value;
     scrollChatContainerToEnd()
@@ -153,9 +166,18 @@ function sendMessage(text: string) {
 
 <template>
   <div style="height: 100vh;">
-    <Splitter class="h-full">
 
-      <SplitterPanel class="flex flex-col relative" :size="25" :minSize="20">
+    <label v-if="isMobile" for="showTopPanel" class="flex justify-start w-full p-2" style="height: 50px;">
+      <input v-model="showMobileMenu" type="checkbox" name="showTopPanel" id="showTopPanel" hidden />
+      <i class="pi pi-list dark:text-gray-200 text-2xl cursor-pointer p-2"/>
+    </label>
+
+    <Splitter class="h-full overflow-hidden" :class="isMobile?'!h-[calc(100vh-55px)]':''">
+
+      <SplitterPanel
+          v-show="!isMobile || isMobile && showMobileMenu"
+          :class="isMobile?'!h-[calc(100vh-55px)]':''"
+          class="flex w-full flex-col sm:relative absolute bg-surface-100 dark:bg-surface-900 h-full" :size="25">
         <div>
           <Profile :is-connected="socket?.isConnected.value"/>
         </div>
@@ -168,7 +190,7 @@ function sendMessage(text: string) {
         </div>
       </SplitterPanel>
 
-      <SplitterPanel class="flex items-center flex-col justify-center" :size="75">
+      <SplitterPanel class="flex items-center flex-col" :size="75">
         <template v-if="openedDialogId && chatMessages !== null">
           <ChatDialog :chat-id="openedDialogId" :chatMessages="chatMessages" />
           <ChatTextInput @sendMessage="sendMessage"/>
@@ -185,8 +207,7 @@ function sendMessage(text: string) {
           <Avatar v-if="slotProps.message.detail.avatar" :image="slotProps.message.detail.avatar" shape="circle" />
           <span class="font-bold">{{slotProps.message.summary}}</span>
         </div>
-        <div class="text-sm my-4" v-html="slotProps.message.detail.message"></div>
-        <!--        <Button size="small" label="Reply" severity="success" @click="onReply()"></Button>-->
+        <div class="text-sm p-4" v-html="slotProps.message.detail.message"></div>
       </div>
     </template>
   </Toast>
