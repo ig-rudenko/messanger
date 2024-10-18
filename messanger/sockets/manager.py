@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from asyncio import Task
 from datetime import datetime
 
-from fastapi import WebSocket
+from fastapi import WebSocket, WebSocketDisconnect
 from pydantic import ValidationError
 from redis.asyncio import Redis, ConnectionPool
 
@@ -38,6 +38,7 @@ class RedisBroadcastManager(BroadcastManager):
         self._listener_tasks: dict[int, Task] = {}
 
     async def send(self, message: MessageResponseSchema, chat_id: int):
+        print("BROADCAST", message)
         await self.redis.publish(str(chat_id), message.model_dump_json(by_alias=True))
 
     async def run_listener(self, websocket: WebSocket, chat_id: int):
@@ -45,17 +46,20 @@ class RedisBroadcastManager(BroadcastManager):
             pubsub = self.redis.pubsub()
             await pubsub.subscribe(str(chat_id))
             while True:
-                msg = await pubsub.get_message(ignore_subscribe_messages=True)
-                if msg is None:
+                msg = await pubsub.get_message(ignore_subscribe_messages=True, timeout=2)
+                print("MESSAGE", msg)
+                if msg is None or msg["type"] != "message" or msg["data"] is None:
                     continue
-                await websocket.send_text(msg)
+                try:
+                    await websocket.send_text(msg["data"].decode("utf-8"))
+                except WebSocketDisconnect:
+                    return
 
         self._listener_tasks[chat_id] = asyncio.create_task(async_listener())
 
     async def stop_listener(self, chat_id: int):
         if self._listener_tasks.get(chat_id):
             self._listener_tasks[chat_id].cancel()
-            await self._listener_tasks[chat_id]
 
 
 class LocalBroadcastManager(BroadcastManager):
@@ -91,7 +95,10 @@ class ConnectionManager:
 
     async def send_message_locally(self, message: MessageResponseSchema, chat_id: int):
         for connection in self._active_connections.get(chat_id, []):
-            await connection.send_text(message.model_dump_json(by_alias=True))
+            try:
+                await connection.send_text(message.model_dump_json(by_alias=True))
+            except WebSocketDisconnect:
+                pass
 
     async def analyze_message(self, data: str, sender_user_id: int):
         try:

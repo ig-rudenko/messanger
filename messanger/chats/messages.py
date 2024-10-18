@@ -58,3 +58,5 @@ async def get_one_last_message(
 async def update_last_message(message: MessageResponseSchema, cache: AbstractCache):
     cache_key = f"last_message:{message.recipient_id}:{message.sender_id}"
     await cache.set(cache_key, message, -1)
+    cache_key = f"last_message:{message.sender_id}:{message.recipient_id}"
+    await cache.set(cache_key, message, -1)

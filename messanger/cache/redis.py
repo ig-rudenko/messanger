@@ -30,7 +30,7 @@ class RedisCache(AbstractCache):
 
     async def set(self, key: str, value: Any, expire: int) -> None:
         # logger.debug(f"Set to cache {key}", key=key)
-        await self._redis.set(key, pickle.dumps(value), ex=expire if expire < 0 else None)
+        await self._redis.set(key, pickle.dumps(value), ex=expire if expire > 0 else None)
 
     async def delete(self, key: str) -> None:
         # logger.debug(f"Delete_ from cache {key}", key=key)
