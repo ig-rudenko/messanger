@@ -1,8 +1,9 @@
 from sqlalchemy import select, or_, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from messanger.sockets.schemas import MessageResponseSchema
+from messanger.cache import AbstractCache
 from messanger.chats.models import Message
+from messanger.sockets.schemas import MessageResponseSchema
 
 
 async def get_last_messages(
@@ -38,3 +39,17 @@ async def get_last_messages(
     ]
 
     return list(reversed(messages))
+
+
+async def get_one_last_message(
+    session: AsyncSession, chat_id: int, user_id: int, cache: AbstractCache | None = None
+) -> MessageResponseSchema | None:
+    cache_key = f"last_message:{chat_id}:{user_id}"
+    if cache is not None:
+        if data := await cache.get(cache_key):
+            return data
+
+    messages = await get_last_messages(session, chat_id, user_id, limit=1)
+    if len(messages):
+        await cache.set(cache_key, messages[0], -1)
+        return messages[0]

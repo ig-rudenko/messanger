@@ -2,10 +2,12 @@ from pydantic_settings import BaseSettings
 
 
 class _Settings(BaseSettings):
-    redis_url: str = "redis://localhost:6379/0"
-    redis_max_connections: int = 10
+    broadcast_redis_url: str = "redis://localhost:6379/0"
+    broadcast_redis_max_connections: int = 10
 
-    broadcast_type: str = "local"
+    redis_cache_url: str = ""
+    redis_cache_max_connections: int = 10
+    broadcast_type: str = "local"  # local or redis
 
     database_url: str = "sqlite+aiosqlite:///db.sqlite3"
     message_storage_type: str = "db_direct"

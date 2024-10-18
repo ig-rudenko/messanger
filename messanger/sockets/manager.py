@@ -1,13 +1,19 @@
+import asyncio
 from abc import ABC, abstractmethod
+from asyncio import Task
 from datetime import datetime
 
 from fastapi import WebSocket
 from pydantic import ValidationError
 from redis.asyncio import Redis, ConnectionPool
 
-from .storages import MessagesStorage, NoMessagesStorage, DatabaseDirectMessagesStorage
-from ..settings import settings
 from .schemas import MessageRequestSchema, MessageResponseSchema
+from .status import set_user_online, set_user_offline, is_user_online
+from .storages import MessagesStorage, NoMessagesStorage, DatabaseDirectMessagesStorage
+from ..cache import AbstractCache, get_cache
+from ..friendships.services import get_user_friendships
+from ..orm.session_manager import db_manager
+from ..settings import settings
 
 
 class BroadcastManager(ABC):
@@ -16,31 +22,71 @@ class BroadcastManager(ABC):
     async def send(self, message: MessageResponseSchema, chat_id: int):
         pass
 
+    @abstractmethod
+    async def run_listener(self, websocket: WebSocket, chat_id: int):
+        pass
+
+    @abstractmethod
+    async def stop_listener(self, chat_id: int):
+        pass
+
 
 class RedisBroadcastManager(BroadcastManager):
     def __init__(self, redis: Redis):
         self.redis = redis
+        self._listener_tasks: dict[int, Task] = {}
 
     async def send(self, message: MessageResponseSchema, chat_id: int):
         await self.redis.publish(str(chat_id), message.model_dump_json(by_alias=True))
+
+    async def run_listener(self, websocket: WebSocket, chat_id: int):
+        async def async_listener():
+            pubsub = self.redis.pubsub()
+            await pubsub.subscribe(str(chat_id))
+            while True:
+                msg = await pubsub.get_message(ignore_subscribe_messages=True)
+                if msg is None:
+                    continue
+                await websocket.send_text(msg)
+
+        self._listener_tasks[chat_id] = asyncio.create_task(async_listener())
+
+    async def stop_listener(self, chat_id: int):
+        if self._listener_tasks.get(chat_id):
+            self._listener_tasks[chat_id].cancel()
+            await self._listener_tasks[chat_id]
 
 
 class LocalBroadcastManager(BroadcastManager):
     async def send(self, message: MessageResponseSchema, chat_id: int):
         print(f"{chat_id}: {message}")
 
+    async def run_listener(self, websocket: WebSocket, chat_id: int):
+        pass
+
+    async def stop_listener(self, chat_id: int):
+        pass
+
 
 class ConnectionManager:
-    def __init__(self, broadcast: BroadcastManager, storage: MessagesStorage):
+    def __init__(self, broadcast: BroadcastManager, storage: MessagesStorage, cache: AbstractCache):
         self._active_connections: dict[int, list[WebSocket]] = {}
         self._storage = storage
         self._broadcast_manager = broadcast
+        self._cache = cache
 
     async def connect(self, websocket: WebSocket, user_id: int):
+        """Подключение пользователя."""
         self._active_connections.setdefault(user_id, []).append(websocket)
 
-    def disconnect(self, websocket: WebSocket, user_id: int):
+        # Подписываемся на обновления сообщений.
+        await self._broadcast_manager.run_listener(websocket, user_id)
+        await self._set_online(user_id)
+
+    async def disconnect(self, websocket: WebSocket, user_id: int):
         self._active_connections[user_id].remove(websocket)
+        await self._broadcast_manager.stop_listener(user_id)
+        await self._set_offline(user_id)
 
     async def send_message_locally(self, message: MessageResponseSchema, chat_id: int):
         for connection in self._active_connections.get(chat_id, []):
@@ -74,10 +120,40 @@ class ConnectionManager:
             # Пользователи на разных серверах, используем Redis для передачи
             await self._broadcast_manager.send(message, chat_id)
 
+    async def _set_online(self, user_id: int):
+        """Пользователь находится в сети."""
+        await set_user_online(user_id, self._cache)
+        await self._send_status_to_all_friendships(user_id, "online")
+
+    async def _set_offline(self, user_id: int):
+        """Пользователь вышел из сети."""
+        await set_user_offline(user_id, self._cache)
+        await self._send_status_to_all_friendships(user_id, "offline")
+
+    async def _send_status_to_all_friendships(self, user_id: int, status: str):
+        async with db_manager.session() as session:
+            # Получаем список друзей пользователя.
+            friendships = await get_user_friendships(session, user_id, self._cache)
+            for friendship in friendships:
+                # Если друг сейчас находится в сети, то отправляем сообщение.
+                if await is_user_online(friendship.id, self._cache):
+                    message = MessageResponseSchema(
+                        type="change_status",
+                        status=status,
+                        recipient_id=friendship.id,
+                        sender_id=user_id,
+                        message=f"Пользователь {friendship.username} {status}.",
+                        created_at=int(datetime.now().timestamp()),
+                    )
+                    await self.broadcast(message, friendship.id)
+
 
 def get_broadcast_manager() -> BroadcastManager:
     if settings.broadcast_type == "redis":
-        pool = ConnectionPool.from_url(settings.redis_url, max_connections=settings.redis_max_connections)
+        pool = ConnectionPool.from_url(
+            settings.broadcast_redis_url,
+            max_connections=settings.broadcast_redis_max_connections,
+        )
         return RedisBroadcastManager(Redis(connection_pool=pool))
 
     return LocalBroadcastManager()
@@ -91,4 +167,4 @@ def get_storage() -> MessagesStorage:
 
 message_storage = get_storage()
 broadcast_manager = get_broadcast_manager()
-manager = ConnectionManager(broadcast_manager, message_storage)
+manager = ConnectionManager(broadcast_manager, message_storage, cache=get_cache())

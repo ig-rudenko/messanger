@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {useStore} from "vuex";
 import Toast from "primevue/toast";
-import {Ref, ref, onMounted} from "vue";
+import {onMounted, ref, Ref} from "vue";
 
 import Profile from "@/components/Profile.vue";
 import ChatDialog from "@/components/ChatDialog.vue";
@@ -18,13 +18,10 @@ import {FriendshipEntityType, friendshipService} from "@/services/friendships";
 import {ChatMessageType, chatService, handleMessage, RequestMessageType, ResponseMessageType} from "@/services/chats";
 import {getAvatar} from "@/services/formats";
 
-const store = useStore();
-const user: User|null = store.state.auth.user;
-if (!user) router.push("/auth/login");
-
 // -------------------------------------------------------
+let user: User|null = null;
 let socket: WebSocketConnector|null = null;
-const currentUserId = user?.id;
+let currentUserId: number|null = null;
 const openedDialogId: Ref<number> = ref(0);
 const chatMessages: Ref<ChatMessageType[]|null> = ref(null);
 // -------------------------------------------------------
@@ -48,12 +45,17 @@ async function notifyAboutNewMessage(message: ResponseMessageType) {
 
   messageFrom = `${from?.firstName||''} ${from?.lastName||''}`;
   messageFromAvatar = from?.image || "";
-  newMessageToast(message.senderId, messageFrom, message.message, getAvatar(messageFrom, messageFromAvatar))
+  newMessageToast(message.senderId, messageFrom, message.message, getAvatar(from.username, messageFromAvatar))
 }
 
 onMounted(() => {
-  socket = new WebSocketConnector(`ws://${location.host}/ws`);
+  const store = useStore();
+  user = store.state.auth.user;
+  if (!user) router.push("/auth/login");
 
+  currentUserId = user?.id || null;
+
+  socket = new WebSocketConnector(`ws://${location.host}/ws`);
   socket.setOnMessage((ev: MessageEvent) => {
     handleMessage(ev.data).then(
         msg => {
@@ -69,6 +71,11 @@ onMounted(() => {
               // Отображаем всплывающее оповещение.
               notifyAboutNewMessage(msg);
             }
+          }
+
+          if (msg.type == "change_status") {
+            const friendship = friendshipService.getFriendshipById(msg.senderId);
+            if (friendship) friendship.online = msg.status == "online";
           }
 
         }

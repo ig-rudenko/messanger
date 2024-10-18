@@ -4,7 +4,6 @@ import {Ref, ref} from "vue";
 import {getCurrentTheme, setAutoTheme, setDarkTheme, setLightTheme, ThemesValues} from "@/services/themes";
 import {useStore} from "vuex";
 import {User} from "@/services/user.ts";
-import router from "@/router.ts";
 import {getAvatar} from "@/services/formats.ts";
 
 defineProps({
@@ -31,7 +30,7 @@ const user: User|null = store.state.auth.user
 
 function logout() {
   store.dispatch("auth/logout");
-  router.push("/auth/login");
+  location.href = "/auth/login";
 }
 
 </script>
