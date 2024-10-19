@@ -5,7 +5,7 @@ from datetime import datetime
 
 from fastapi import WebSocket, WebSocketDisconnect
 from pydantic import ValidationError
-from redis.asyncio import Redis, ConnectionPool
+from redis.asyncio import Redis, ConnectionPool, RedisError
 
 from .schemas import MessageRequestSchema, MessageResponseSchema
 from .status import set_user_online, set_user_offline, is_user_online
@@ -38,28 +38,39 @@ class RedisBroadcastManager(BroadcastManager):
         self._listener_tasks: dict[int, Task] = {}
 
     async def send(self, message: MessageResponseSchema, chat_id: int):
-        print("BROADCAST", message)
-        await self.redis.publish(str(chat_id), message.model_dump_json(by_alias=True))
+        try:
+            await self.redis.publish(str(chat_id), message.model_dump_json(by_alias=True))
+        except RedisError as e:
+            print(e)
 
     async def run_listener(self, websocket: WebSocket, chat_id: int):
         async def async_listener():
             pubsub = self.redis.pubsub()
             await pubsub.subscribe(str(chat_id))
-            while True:
-                msg = await pubsub.get_message(ignore_subscribe_messages=True, timeout=2)
-                print("MESSAGE", msg)
-                if msg is None or msg["type"] != "message" or msg["data"] is None:
-                    continue
-                try:
-                    await websocket.send_text(msg["data"].decode("utf-8"))
-                except WebSocketDisconnect:
-                    return
+            try:
+                while True:
+                    msg = await pubsub.get_message(ignore_subscribe_messages=True, timeout=5)
+                    if msg is None or msg["type"] != "message" or msg["data"] is None:
+                        continue
+                    try:
+                        await websocket.send_text(msg["data"].decode("utf-8"))
+                    except WebSocketDisconnect:
+                        return
+            finally:
+                # Убедимся, что pubsub закрыт корректно
+                await pubsub.unsubscribe()
+                await pubsub.close()
 
         self._listener_tasks[chat_id] = asyncio.create_task(async_listener())
 
     async def stop_listener(self, chat_id: int):
-        if self._listener_tasks.get(chat_id):
-            self._listener_tasks[chat_id].cancel()
+        task = self._listener_tasks.get(chat_id)
+        if task:
+            task.cancel()
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass  # Это ожидаемая ошибка при отмене задач
 
 
 class LocalBroadcastManager(BroadcastManager):
@@ -94,11 +105,17 @@ class ConnectionManager:
         await self._set_offline(user_id)
 
     async def send_message_locally(self, message: MessageResponseSchema, chat_id: int):
+        tasks = []
         for connection in self._active_connections.get(chat_id, []):
-            try:
-                await connection.send_text(message.model_dump_json(by_alias=True))
-            except WebSocketDisconnect:
-                pass
+            tasks.append(self._send_message_to_websocket(connection, message))
+        await asyncio.gather(*tasks)  # Параллельно отправляем сообщения
+
+    @staticmethod
+    async def _send_message_to_websocket(websocket: WebSocket, message: MessageResponseSchema):
+        try:
+            await websocket.send_text(message.model_dump_json(by_alias=True))
+        except WebSocketDisconnect:
+            pass
 
     async def analyze_message(self, data: str, sender_user_id: int):
         try:
@@ -142,10 +159,9 @@ class ConnectionManager:
 
     async def _send_status_to_all_friendships(self, user_id: int, status: str):
         async with db_manager.session() as session:
-            # Получаем список друзей пользователя.
             friendships = await get_user_friendships(session, user_id, self._cache)
+            tasks = []
             for friendship in friendships:
-                # Если друг сейчас находится в сети, то отправляем сообщение.
                 if await is_user_online(friendship.id, self._cache):
                     message = MessageResponseSchema(
                         type="change_status",
@@ -155,7 +171,8 @@ class ConnectionManager:
                         message=f"Пользователь {friendship.username} {status}.",
                         created_at=int(datetime.now().timestamp()),
                     )
-                    await self.broadcast(message, friendship.id)
+                    tasks.append(self.broadcast(message, friendship.id))
+            await asyncio.gather(*tasks)  # Параллельная отправка статусов
 
 
 def get_broadcast_manager() -> BroadcastManager:
