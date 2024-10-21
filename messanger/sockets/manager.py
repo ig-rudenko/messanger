@@ -99,6 +99,7 @@ class ConnectionManager:
 
         # Подписываемся на обновления сообщений.
         await self._broadcast_manager.run_listener(websocket, user_id)
+        await self._set_online(user_id)
 
     async def disconnect(self, websocket: WebSocket, user_id: int):
         self._active_connections[user_id].remove(websocket)
@@ -152,13 +153,11 @@ class ConnectionManager:
             for user_id, connections in self._active_connections.items():
                 if connections:
                     # Пользователь находится в сети.
-                    print("# Пользователь находится в сети.", user_id)
                     await self._set_online(user_id)
 
                 # Если до этого был онлайн.
                 elif await is_user_online(user_id, self._cache):
                     # Пользователь вышел из сети.
-                    print("# Пользователь вышел из сети.", user_id)
                     await self._set_offline(user_id)
 
             await asyncio.sleep(5)
