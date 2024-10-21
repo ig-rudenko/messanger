@@ -138,7 +138,7 @@ function addMyMessageToChat(data: RequestMessageType) {
     message: data.message,
     recipientId: data.recipientId,
     senderId: currentUserId,
-    createdAt: (new Date()).getTime() / 1000
+    createdAt: Math.floor((new Date()).getTime() / 1000)
   }
 
   // Обновляем последнее сообщение в панели всех чатов
@@ -192,7 +192,8 @@ function sendMessage(text: string) {
 
       <SplitterPanel class="flex items-center flex-col" :size="75">
         <template v-if="openedDialogId && chatMessages !== null">
-          <ChatDialog :chat-id="openedDialogId" :chatMessages="chatMessages" />
+          <ChatDialog :chat-id="openedDialogId" :chatMessages="chatMessages"
+                      @view-message="ts => chatService.updateLastReadTime(openedDialogId, ts)"/>
           <ChatTextInput @sendMessage="sendMessage"/>
         </template>
       </SplitterPanel>

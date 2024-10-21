@@ -6,7 +6,7 @@ from .models import Friendship
 from .schemas import FriendshipEntitySchema, ExistingFriendshipEntitySchema
 from ..auth.models import User
 from ..cache import AbstractCache
-from ..chats.messages import get_one_last_message
+from ..chats.messages import get_one_last_message, get_unread_messages_count
 from ..sockets.schemas import MessageResponseSchema
 from ..sockets.status import is_user_online
 
@@ -26,6 +26,8 @@ async def get_my_friendships_data(
             user_id=user_id,
             cache=cache,
         )
+        new_messages_count = await get_unread_messages_count(session, friendship.id, user_id, cache=cache)
+
         result.append(
             ExistingFriendshipEntitySchema(
                 id=friendship.id,
@@ -36,6 +38,7 @@ async def get_my_friendships_data(
                 last_message=last_message.message if last_message else None,
                 last_datetime=last_message.created_at if last_message else None,
                 online=await is_user_online(friendship.id, cache),
+                new_messages_count=new_messages_count,
             )
         )
     return result
@@ -77,7 +80,7 @@ async def get_user_friendships(
 
 
 async def create_friendship(
-    session: AsyncSession, user_id: int, friend_username: str, cache: AbstractCache | None = None
+    session: AsyncSession, user_id: int, friend_username: str, cache: AbstractCache
 ) -> FriendshipEntitySchema:
     friend = await User.get(session, username=friend_username)
 
@@ -98,16 +101,13 @@ async def create_friendship(
         await save_point.rollback()
     else:
         # Добавляем в кэш новую запись.
-        cache_key = f"user_friendships:{user_id}"
-        cached_friendship: list[FriendshipEntitySchema] = (await cache.get(cache_key)) or []
-        cached_friendship.append(friendship)
-        await cache.set(cache_key, cached_friendship, expire=-1)
+        await append_friendship_to_cache(user_id, friendship, cache)
 
     return friendship
 
 
 async def delete_friendship(
-    session: AsyncSession, user_id: int, friend_username: str, cache: AbstractCache | None = None
+    session: AsyncSession, user_id: int, friend_username: str, cache: AbstractCache
 ) -> None:
     friend = await User.get(session, username=friend_username)
     try:
@@ -116,11 +116,24 @@ async def delete_friendship(
         return
     else:
         await friendship.delete(session)
-        # Добавляем в кэш новую запись.
-        cache_key = f"user_friendships:{user_id}"
-        cached_friendship: list[FriendshipEntitySchema] = (await cache.get(cache_key)) or []
-        new_friendships = [fs for fs in cached_friendship if fs.id != friend.id]
-        await cache.set(cache_key, new_friendships, expire=-1)
+        # Удаляем из кэша конкретную запись.
+        await delete_friendship_from_cache(user_id, friendship.id, cache)
+
+
+async def append_friendship_to_cache(
+    user_id: int, friendship: FriendshipEntitySchema, cache: AbstractCache
+) -> None:
+    cache_key = f"user_friendships:{user_id}"
+    cached_friendship: list[FriendshipEntitySchema] = (await cache.get(cache_key)) or []
+    cached_friendship.append(friendship)
+    await cache.set(cache_key, cached_friendship, expire=-1)
+
+
+async def delete_friendship_from_cache(user_id: int, friendship_id: int, cache: AbstractCache) -> None:
+    cache_key = f"user_friendships:{user_id}"
+    cached_friendship: list[FriendshipEntitySchema] = (await cache.get(cache_key)) or []
+    new_friendships = [fs for fs in cached_friendship if fs.id != friendship_id]
+    await cache.set(cache_key, new_friendships, expire=-1)
 
 
 async def search_chat_entities(

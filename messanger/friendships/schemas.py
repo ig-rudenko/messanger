@@ -17,6 +17,7 @@ class ExistingFriendshipEntitySchema(FriendshipEntitySchema):
     last_message: Optional[str] = Field(default=None)
     last_datetime: Optional[int] = Field(default=None)
     online: bool = Field(default=False)
+    new_messages_count: int = Field(default=0)
 
 
 class NewFriendshipEntitySchema(BaseModel):

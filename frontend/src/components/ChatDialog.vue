@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import {ChatMessageType} from "@/services/chats";
-import {onMounted, PropType} from "vue";
+import {ChatMessageType, chatService} from "@/services/chats";
+import {onMounted, onUpdated, PropType} from "vue";
 import ChatMessage from "@/components/ChatMessage.vue";
 import {scrollChatContainerToEnd} from "@/services/scroller";
 import {useStore} from "vuex";
-import {User} from "@/services/user.ts";
+import {User} from "@/services/user";
 
 const props = defineProps({
   chatId: {
@@ -17,13 +17,51 @@ const props = defineProps({
   }
 })
 
+const emit = defineEmits(['viewMessage'])
+
+const observerOptions = {
+  root: document.querySelector('.messages-container'),
+  threshold: 0.5, // 50% сообщения должно быть видно на экране
+};
+const observerCallback = (entries: any) => {
+  entries.forEach((entry: any) => {
+    if (entry.isIntersecting) {
+      const messageTimestamp = entry.target.attributes['data-created-at']?.value;
+      if (messageTimestamp) {
+        emit('viewMessage', Number(messageTimestamp));
+      }
+    }
+  });
+};
+
+const observer = new IntersectionObserver(observerCallback, observerOptions);
+
 const store = useStore()
 const user: User = store.state.auth.user!
 const currentUserId = user.id
 
-onMounted(() => {
-  scrollChatContainerToEnd()
+let lastReadTime = 0;
+
+
+onMounted( async () => {
+  scrollChatContainerToEnd();
+  lastReadTime = await chatService.getLastReadTime(props.chatId);
 })
+
+onUpdated(async () => {
+  const messages = document.querySelectorAll('.message');
+  messages.forEach(message => observer.observe(message));
+  lastReadTime = await chatService.getLastReadTime(props.chatId);
+})
+
+function showNewMessagesDivider(msg: ChatMessageType, index: number) {
+  if (!lastReadTime) return false;
+
+  const next = props.chatMessages[index + 1];
+
+  return msg?.createdAt < lastReadTime && next?.createdAt > lastReadTime;
+
+}
 
 function getMessageClasses(msg: ChatMessageType, index: number): string[] {
   let classes: string[] = []
@@ -60,6 +98,12 @@ function getMessageClasses(msg: ChatMessageType, index: number): string[] {
     <div id="messages-container" class="group flex flex-col p-2 sm:p-10">
       <template v-for="(msg, index) in chatMessages">
         <ChatMessage :message="msg" :class="getMessageClasses(msg, index)"/>
+
+        <div v-if="showNewMessagesDivider(msg, index)" class="py-2">
+          <hr>
+          <div class="text-sm text-gray-600 dark:text-gray-400 flex justify-center">Новые</div>
+        </div>
+
       </template>
     </div>
   </div>
@@ -77,17 +121,21 @@ function getMessageClasses(msg: ChatMessageType, index: number): string[] {
   border-radius: 20px;
   opacity: 0.2;
 }
+
 #chat-dialog:hover::-webkit-scrollbar-track-piece {
   background-color: var(--p-surface-200);
 }
+
 #chat-dialog::-webkit-scrollbar-thumb {
   background-color: var(--p-surface-0);
 }
+
 #chat-dialog:hover::-webkit-scrollbar-thumb {
   background-color: var(--p-surface-400);
   border-radius: 20px;
   height: 4px;
 }
+
 #chat-dialog::-webkit-scrollbar-thumb:hover {
   background-color: var(--p-surface-800);
 }
@@ -96,15 +144,19 @@ function getMessageClasses(msg: ChatMessageType, index: number): string[] {
 #chat-dialog:where(.dark, .dark *)::-webkit-scrollbar-track-piece {
   background-color: var(--p-surface-900);
 }
+
 #chat-dialog:where(.dark, .dark *):hover::-webkit-scrollbar-track-piece {
   background-color: var(--p-surface-600);
 }
+
 #chat-dialog:where(.dark, .dark *)::-webkit-scrollbar-thumb {
   background-color: var(--p-surface-900);
 }
+
 #chat-dialog:where(.dark, .dark *):hover::-webkit-scrollbar-thumb {
   background-color: var(--p-surface-800);
 }
+
 #chat-dialog:where(.dark, .dark *)::-webkit-scrollbar-thumb:hover {
   background-color: var(--p-surface-400);
 }

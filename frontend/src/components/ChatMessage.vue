@@ -15,9 +15,9 @@ defineProps({
 </script>
 
 <template>
-  <div class="m-1 p-3 rounded w-fit max-w-xl">
+  <div class="m-1 p-3 rounded w-fit max-w-xl message" :data-created-at="message.createdAt">
     <div class="pb-2"><span v-html="textToHtml(message.message)"></span></div>
-    <div class="text-sm font-light">{{ verboseDatetime(message.createdAt) }}</div>
+    <div class="text-sm font-light" >{{ verboseDatetime(message.createdAt) }}</div>
   </div>
 </template>
 

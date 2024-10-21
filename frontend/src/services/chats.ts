@@ -37,9 +37,11 @@ export async function handleMessage(data: any): Promise<ResponseMessageType> {
 
 export class ChatService {
     private _chats: Ref<Map<number, ChatMessageType[]>>
+    private _lastReadTimes: Map<number, number>
 
     constructor() {
         this._chats = ref(new Map());
+        this._lastReadTimes = new Map();
     }
 
     get chats() {
@@ -55,10 +57,37 @@ export class ChatService {
     }
 
     async getLastChatMessages(chat_id: number): Promise<ChatMessageType[]> {
-        const resp = await api.get<ChatMessageType[]>("/chats/"+chat_id+"/lastMessages");
-        this.chats.set(chat_id, resp.data);
-        return resp.data;
+        const {data} = await api.get<{timestamp: number}>("/chats/"+chat_id+"/lastRead");
+        this._lastReadTimes.set(chat_id, data.timestamp);
+
+        const messages = []
+        let last = await api.get<ChatMessageType[]>("/chats/"+chat_id+"/lastMessages");
+        messages.push(...last.data);
+
+        // let unread = await api.get<ChatMessageType[]>("/chats/"+chat_id+"/unreadMessages");
+        // messages.push(...unread.data);
+        this.chats.set(chat_id, messages);
+        return messages;
     }
+
+    async getLastReadTime(chat_id: number): Promise<number> {
+        let lastRead = this._lastReadTimes.get(chat_id) || 0;
+        if (!lastRead) {
+            const {data} = await api.get<{timestamp: number}>("/chats/"+chat_id+"/lastRead");
+            this._lastReadTimes.set(chat_id, data.timestamp);
+            return data.timestamp;
+        }
+        return lastRead
+    }
+
+    async updateLastReadTime(chat_id: number, timestamp: number): Promise<void> {
+        const lastRead = this._lastReadTimes.get(chat_id);
+        if (!lastRead || timestamp > lastRead) {
+            await api.post("/chats/"+chat_id+"/lastRead", {timestamp: timestamp});
+            this._lastReadTimes.set(chat_id, timestamp);
+        }
+    }
+
 }
 
 export const chatService = new ChatService();

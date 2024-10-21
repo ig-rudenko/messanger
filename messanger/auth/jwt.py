@@ -5,12 +5,12 @@ from fastapi import HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
 
-from .schemas import TokenPair
 from .exc import (
     CredentialsException,
     InvalidAccessTokenException,
     InvalidRefreshTokenException,
 )
+from .schemas import TokenPair
 from ..settings import settings
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/token")
@@ -46,7 +46,7 @@ def refresh_access_token(refresh_token: str) -> str:
 
     return _create_jwt_token(
         {USER_IDENTIFIER: payload[USER_IDENTIFIER], "type": "access"},
-        timedelta(seconds=2),
+        timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
     )
 
 
