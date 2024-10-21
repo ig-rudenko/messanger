@@ -91,18 +91,18 @@ class ConnectionManager:
         self._broadcast_manager = broadcast
         self._cache = cache
 
+        asyncio.create_task(self._check_user_online_status())
+
     async def connect(self, websocket: WebSocket, user_id: int):
         """Подключение пользователя."""
         self._active_connections.setdefault(user_id, []).append(websocket)
 
         # Подписываемся на обновления сообщений.
         await self._broadcast_manager.run_listener(websocket, user_id)
-        await self._set_online(user_id)
 
     async def disconnect(self, websocket: WebSocket, user_id: int):
         self._active_connections[user_id].remove(websocket)
         await self._broadcast_manager.stop_listener(user_id)
-        await self._set_offline(user_id)
 
     async def send_message_locally(self, message: MessageResponseSchema, chat_id: int):
         tasks = []
@@ -147,6 +147,22 @@ class ConnectionManager:
             # Пользователи на разных серверах, используем Redis для передачи
             await self._broadcast_manager.send(message, chat_id)
 
+    async def _check_user_online_status(self):
+        while True:
+            for user_id, connections in self._active_connections.items():
+                if connections:
+                    # Пользователь находится в сети.
+                    print("# Пользователь находится в сети.", user_id)
+                    await self._set_online(user_id)
+
+                # Если до этого был онлайн.
+                elif await is_user_online(user_id, self._cache):
+                    # Пользователь вышел из сети.
+                    print("# Пользователь вышел из сети.", user_id)
+                    await self._set_offline(user_id)
+
+            await asyncio.sleep(5)
+
     async def _set_online(self, user_id: int):
         """Пользователь находится в сети."""
         await set_user_online(user_id, self._cache)
@@ -162,13 +178,17 @@ class ConnectionManager:
             friendships = await get_user_friendships(session, user_id, self._cache)
             tasks = []
             for friendship in friendships:
+                if friendship.id == user_id:
+                    # Пропускаем самого себя.
+                    continue
+
                 if await is_user_online(friendship.id, self._cache):
                     message = MessageResponseSchema(
                         type="change_status",
                         status=status,
                         recipient_id=friendship.id,
                         sender_id=user_id,
-                        message=f"Пользователь {friendship.username} {status}.",
+                        message=f"Пользователь {user_id} {status}.",
                         created_at=int(datetime.now().timestamp()),
                     )
                     tasks.append(self.broadcast(message, friendship.id))

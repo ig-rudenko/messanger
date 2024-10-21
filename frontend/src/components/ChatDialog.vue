@@ -21,7 +21,7 @@ const emit = defineEmits(['viewMessage'])
 
 const observerOptions = {
   root: document.querySelector('.messages-container'),
-  threshold: 0.5, // 50% сообщения должно быть видно на экране
+  threshold: 0.15, // 15% сообщения должно быть видно на экране
 };
 const observerCallback = (entries: any) => {
   entries.forEach((entry: any) => {
@@ -44,11 +44,13 @@ let lastReadTime = 0;
 
 
 onMounted( async () => {
+  console.log("onMounted")
   scrollChatContainerToEnd();
   lastReadTime = await chatService.getLastReadTime(props.chatId);
 })
 
 onUpdated(async () => {
+  console.log("onUpdated")
   const messages = document.querySelectorAll('.message');
   messages.forEach(message => observer.observe(message));
   lastReadTime = await chatService.getLastReadTime(props.chatId);
@@ -56,6 +58,7 @@ onUpdated(async () => {
 
 function showNewMessagesDivider(msg: ChatMessageType, index: number) {
   if (!lastReadTime) return false;
+  console.log(lastReadTime)
 
   const next = props.chatMessages[index + 1];
 
@@ -99,7 +102,7 @@ function getMessageClasses(msg: ChatMessageType, index: number): string[] {
       <template v-for="(msg, index) in chatMessages">
         <ChatMessage :message="msg" :class="getMessageClasses(msg, index)"/>
 
-        <div v-if="showNewMessagesDivider(msg, index)" class="py-2">
+        <div id="unread-messages" v-if="showNewMessagesDivider(msg, index)" class="py-2">
           <hr>
           <div class="text-sm text-gray-600 dark:text-gray-400 flex justify-center">Новые</div>
         </div>

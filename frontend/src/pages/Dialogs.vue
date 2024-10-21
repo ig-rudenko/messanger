@@ -108,23 +108,25 @@ function selectedFriendship(friendship: FriendshipEntityType) {
 function openDialog(chat_id: number) {
   // Выключаем мобильное окно.
   showMobileMenu.value = false;
-
   // Фокус на поле ввода.
   document.getElementById("chat-input")?.focus();
-
   if (openedDialogId.value == chat_id) return;
 
+  openedDialogId.value = 0;
   openedDialogId.value = chat_id;
-  // Сразу пытаемся заполнить сообщениями из хранилища.
-  chatMessages.value = chatService.getStoredChat(chat_id);
-  scrollChatContainerToEnd();
+  
+  setTimeout(() => {
+    // Сразу пытаемся заполнить сообщениями из хранилища.
+    chatMessages.value = chatService.getStoredChat(chat_id);
+    scrollChatContainerToEnd(true);
 
-  // Запрашиваем у сервера последние сообщения.
-  chatService.getLastChatMessages(chat_id).then(value => {
-    chatMessages.value = value;
-    scrollChatContainerToEnd()
-    // Убираем счетчик кол-ва новых непрочитанных сообщений.
-    friendshipService.resetNewMessageCount(chat_id);
+    // Запрашиваем у сервера последние сообщения.
+    chatService.getLastChatMessages(chat_id).then(value => {
+      chatMessages.value = value;
+      scrollChatContainerToEnd(true)
+      // Убираем счетчик кол-ва новых непрочитанных сообщений.
+      friendshipService.resetNewMessageCount(chat_id);
+    })
   })
 }
 

@@ -83,8 +83,8 @@ export class ChatService {
     async updateLastReadTime(chat_id: number, timestamp: number): Promise<void> {
         const lastRead = this._lastReadTimes.get(chat_id);
         if (!lastRead || timestamp > lastRead) {
-            await api.post("/chats/"+chat_id+"/lastRead", {timestamp: timestamp});
             this._lastReadTimes.set(chat_id, timestamp);
+            await api.post("/chats/"+chat_id+"/lastRead", {timestamp: timestamp});
         }
     }
 
