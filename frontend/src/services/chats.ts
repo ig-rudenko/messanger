@@ -60,14 +60,10 @@ export class ChatService {
         const {data} = await api.get<{timestamp: number}>("/chats/"+chat_id+"/lastRead");
         this._lastReadTimes.set(chat_id, data.timestamp);
 
-        const messages = []
-        let last = await api.get<ChatMessageType[]>("/chats/"+chat_id+"/lastMessages");
-        messages.push(...last.data);
+        let response = await api.get<ChatMessageType[]>("/chats/"+chat_id+"/lastMessages");
 
-        // let unread = await api.get<ChatMessageType[]>("/chats/"+chat_id+"/unreadMessages");
-        // messages.push(...unread.data);
-        this.chats.set(chat_id, messages);
-        return messages;
+        this.chats.set(chat_id, response.data);
+        return response.data;
     }
 
     async getLastReadTime(chat_id: number): Promise<number> {
