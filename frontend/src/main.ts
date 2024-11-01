@@ -1,8 +1,5 @@
 import { createApp } from 'vue';
-import "./input.css";
-import "primeicons/primeicons.css";
-import App from "./App.vue";
-
+import App from "@/App.vue";
 import PrimeVue from 'primevue/config';
 import ToastService from 'primevue/toastservice';
 import Tooltip from 'primevue/tooltip';
@@ -18,19 +15,16 @@ import Splitter from 'primevue/splitter';
 import SplitterPanel from 'primevue/splitterpanel';
 import Textarea from "primevue/textarea";
 
-// @ts-ignore
-import Aura from './presets/aura';
-import router from "./router.ts";
+import "@/styles.css";
+import "@/assets/base.css";
+import "primeicons/primeicons.css";
 import store from "@/store";
-import setupInterceptors from "@/services/setupInterceptors.ts";
+import router from "@/router";
+import setupInterceptors from "@/services/setupInterceptors";
 
 setupInterceptors();
 export const app = createApp(App);
-app.use(PrimeVue, {
-    unstyled: true,
-    pt: Aura,
-    ripple: true,
-});
+app.use(PrimeVue, {ripple: true, theme: 'none'});
 app.use(ToastService);
 app.use(store);
 app.use(router);
