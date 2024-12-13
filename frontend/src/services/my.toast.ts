@@ -1,4 +1,4 @@
-import {app} from '@/main';
+import {app} from '@/appInstance';
 
 const basicLifeTime = 3000;
 

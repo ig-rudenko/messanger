@@ -1,1 +1,0 @@
-.p-accordionpanel:first-child>.p-accordionheader{@apply rounded-t-md;}.p-accordionpanel:last-child>.p-accordionheader{@apply rounded-b-md;}.p-accordionpanel:last-child.p-accordionpanel-active>.p-accordionheader{@apply rounded-b-md;}.p-accordionpanel:not(.p-disabled) .p-accordionheader:focus-visible{@apply outline outline-1 outline-offset-[-1px] outline-primary;}

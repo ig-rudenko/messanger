@@ -14,7 +14,7 @@ async def private_chat(websocket: WebSocket, user: User = Depends(authenticate_w
 
     try:
         while True:
-            data = await websocket.receive_text()
+            data = await websocket.receive_text()  # Ожидание сообщения от сокета.
             await manager.analyze_message(data, user.id)
     except WebSocketDisconnect:
         await manager.disconnect(websocket, user.id)

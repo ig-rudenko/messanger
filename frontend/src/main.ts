@@ -1,5 +1,3 @@
-import { createApp } from 'vue';
-import App from "@/App.vue";
 import PrimeVue from 'primevue/config';
 import ToastService from 'primevue/toastservice';
 import Tooltip from 'primevue/tooltip';
@@ -15,15 +13,15 @@ import Splitter from 'primevue/splitter';
 import SplitterPanel from 'primevue/splitterpanel';
 import Textarea from "primevue/textarea";
 
-import "@/styles.css";
 import "@/assets/base.css";
 import "primeicons/primeicons.css";
+
+import {app} from '@/appInstance';
 import store from "@/store";
 import router from "@/router";
 import setupInterceptors from "@/services/setupInterceptors";
 
 setupInterceptors();
-export const app = createApp(App);
 app.use(PrimeVue, {ripple: true, theme: 'none'});
 app.use(ToastService);
 app.use(store);
