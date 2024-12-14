@@ -1,0 +1,15 @@
+[Unit]
+Description=Messanger API and chat service
+
+[Service]
+User=
+Group=
+
+Restart=on-failure
+
+WorkingDirectory=/path/to/project
+EnvironmentFile=/path/to/.env
+ExecStart=/path/to/uvicorn main:app --host 127.0.0.1 --port 8000
+
+[Install]
+WantedBy="multi-user.target"
