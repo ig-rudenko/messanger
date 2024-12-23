@@ -1,7 +1,8 @@
 services:
 
-  nginx:
-    image: nginx:1.26.2-alpine
+  frontend:
+    image: messanger-front:0.2
+    build: frontend
     ports:
       - "8000:80"
     volumes:
