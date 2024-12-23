@@ -19,6 +19,8 @@ print("Loaded model", User)
 print("Loaded model", Friendship)
 print("Loaded model", Message)
 
+print(settings.database_url)
+
 db_url = config.get_main_option("sqlalchemy.url", None)
 if db_url is None:
     config.set_main_option("sqlalchemy.url", settings.database_url)

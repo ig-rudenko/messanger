@@ -1,39 +1,21 @@
-FROM python:3.12.6-alpine AS builder
-
-RUN apk update && apk add curl
-
-# Устанавливаем Poetry
-RUN curl -sSL https://install.python-poetry.org | python -
-
-# Добавляем Poetry в PATH
-ENV PATH="/root/.local/bin:$PATH"
-
-RUN pip install --upgrade --no-cache-dir pip;
-
-WORKDIR /app
-
-COPY pyproject.toml poetry.lock /app/
-
-RUN poetry config virtualenvs.create false && \
-    poetry install --only main --no-interaction --no-ansi --no-cache;
-
-
-FROM python:3.12.6-alpine
-LABEL authors="irudenko"
+FROM python:3.12.8-alpine
 
 ENV PYTHONUNBUFFERED=1
 
-RUN addgroup -g 10001 appgroup \
-    && adduser -D -h /app -u 10002 app appgroup \
-    && chown -R app:app /app;
-
-# Копируем зависимости из builder-этапа
-COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
-COPY --from=builder /usr/local/bin /usr/local/bin
-
 WORKDIR /app
 
-COPY --chown=app:appgroup . .
+COPY requirements.txt /app/
+
+RUN pip install --upgrade --no-cache-dir pip && \
+    pip install -r requirements.txt --no-cache-dir;
+
+RUN addgroup -g 10001 user_app_group \
+    && adduser -D -h /app -u 10002 user_app user_app_group \
+    && chown -R user_app:user_app_group /app;
+
+COPY --chown=user_app:user_app_group . /app/
+
+USER user_app
 
 EXPOSE 8000
 
