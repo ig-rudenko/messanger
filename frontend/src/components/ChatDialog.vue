@@ -2,7 +2,7 @@
 import {ChatMessageType, chatService} from "@/services/chats";
 import {onMounted, onUpdated, PropType} from "vue";
 import ChatMessage from "@/components/ChatMessage.vue";
-import {scrollChatContainerToEnd} from "@/services/scroller";
+import {scrollChatContainerToEnd, scrollChatContainerToMessageByTime} from "@/services/scroller";
 import {useStore} from "vuex";
 import {User} from "@/services/user";
 
@@ -18,6 +18,8 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['viewMessage'])
+let topViewMessageTime: number = 0;
+let enableMessageLoaderScroller = true;
 
 const observerOptions = {
   root: document.querySelector('.messages-container'),
@@ -28,7 +30,21 @@ const observerCallback = (entries: any) => {
     if (entry.isIntersecting) {
       const messageTimestamp = entry.target.attributes['data-created-at']?.value;
       if (messageTimestamp) {
-        emit('viewMessage', Number(messageTimestamp));
+        topViewMessageTime = Number(messageTimestamp);
+        emit('viewMessage', topViewMessageTime);
+      }
+      if (enableMessageLoaderScroller && entry.target.attributes["mark"]?.value === "first") {
+        enableMessageLoaderScroller = false;
+        const lastTopViewMessageTime = topViewMessageTime;
+
+        chatService.getChatMessages(props.chatId, messageTimestamp, 100).then(
+            (messages: ChatMessageType[]) => {
+              props.chatMessages?.unshift(...messages);
+              scrollChatContainerToMessageByTime(lastTopViewMessageTime)
+              setTimeout(() => enableMessageLoaderScroller = true, 500)
+            }
+        )
+
       }
     }
   });
@@ -58,7 +74,6 @@ onUpdated(async () => {
 
 function showNewMessagesDivider(msg: ChatMessageType, index: number) {
   if (!lastReadTime) return false;
-  console.log(lastReadTime)
 
   const next = props.chatMessages[index + 1];
 
@@ -100,7 +115,7 @@ function getMessageClasses(msg: ChatMessageType, index: number): string[] {
   <div id="chat-dialog" v-if="chatMessages" class="w-full h-full flex flex-col-reverse overflow-y-auto">
     <div id="messages-container" class="group flex flex-col p-2 sm:p-10">
       <template v-for="(msg, index) in chatMessages">
-        <ChatMessage :message="msg" :class="getMessageClasses(msg, index)"/>
+        <ChatMessage :message="msg" :class="getMessageClasses(msg, index)" :mark="index===0?'first':''"/>
 
         <div id="unread-messages" v-if="showNewMessagesDivider(msg, index)" class="py-2">
           <hr>

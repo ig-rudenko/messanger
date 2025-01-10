@@ -8,6 +8,11 @@ defineProps({
   message: {
     required: true,
     type: Object as PropType<ChatMessageType>
+  },
+  mark: {
+    required: false,
+    type: String,
+    default: ""
   }
 })
 
@@ -15,7 +20,7 @@ defineProps({
 </script>
 
 <template>
-  <div class="m-1 p-3 rounded w-fit max-w-xl message" :data-created-at="message.createdAt">
+  <div class="m-1 p-3 rounded w-fit max-w-xl message" :mark="mark" :data-created-at="message.createdAt">
     <div class="pb-2"><span v-html="textToHtml(message.message)"></span></div>
     <div class="text-sm font-light" >{{ verboseDatetime(message.createdAt) }}</div>
   </div>

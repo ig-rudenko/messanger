@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, UTC
 
 from sqlalchemy import select, or_, and_, func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -49,6 +49,7 @@ async def get_last_messages(
 
     if time_to:
         query = query.where(Message.created_at <= time_to)
+    print(query.compile(compile_kwargs={"literal_binds": True}))
 
     result = await session.execute(query)
 

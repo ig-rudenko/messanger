@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from fastapi import Depends, APIRouter
+from fastapi import Depends, APIRouter, Query
 
 from messanger.auth.models import User
 from messanger.auth.users import get_current_user
@@ -18,14 +18,41 @@ from messanger.sockets.schemas import MessageResponseSchema
 router = APIRouter(prefix="/chats", tags=["chats"])
 
 
+def last_messages_query_params(
+    limit: int = Query(default=100, ge=1, le=100),
+    time_from: None | int = Query(default=None, alias="timeFrom"),
+    time_to: None | int = Query(default=None, alias="timeTo"),
+    with_unread: bool = Query(default=True, alias="withUnread"),
+):
+    return {
+        "limit": limit,
+        "time_from": datetime.fromtimestamp(time_from) if isinstance(time_from, int) else time_from,
+        "time_to": datetime.fromtimestamp(time_to) if isinstance(time_to, int) else time_to,
+        "with_unread": with_unread,
+    }
+
+
 @router.get("/{chat_id}/lastMessages", response_model=list[MessageResponseSchema])
 async def get_last_messages_api_view(
     chat_id: int,
+    query: dict = Depends(last_messages_query_params),
     user: User = Depends(get_current_user),
     session=Depends(get_session),
 ):
-    unread_messages_count = await get_unread_messages_count(session, chat_id, user.id, cache=get_cache())
-    return await get_last_messages(session, chat_id, user.id, limit=100 + unread_messages_count)
+    print(query)
+    if query["with_unread"]:
+        unread_messages_count = await get_unread_messages_count(session, chat_id, user.id, cache=get_cache())
+    else:
+        unread_messages_count = 0
+
+    return await get_last_messages(
+        session=session,
+        chat_id=chat_id,
+        user_id=user.id,
+        time_from=query["time_from"],
+        time_to=query["time_to"],
+        limit=query["limit"] + unread_messages_count,
+    )
 
 
 @router.get("/{chat_id}/unreadMessagesCount", response_model=int)

@@ -66,6 +66,15 @@ export class ChatService {
         return response.data;
     }
 
+    async getChatMessages(chat_id: number, timeTo: number, limit: number = 100): Promise<ChatMessageType[]> {
+        const {data} = await api.get<ChatMessageType[]>(
+            "/chats/"+chat_id+"/lastMessages",
+            {params: {timeTo: timeTo, limit: limit, withUnread: false}}
+        );
+
+        return data;
+    }
+
     async getLastReadTime(chat_id: number): Promise<number> {
         let lastRead = this._lastReadTimes.get(chat_id) || 0;
         if (!lastRead) {

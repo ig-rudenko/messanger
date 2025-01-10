@@ -11,3 +11,17 @@ export function scrollChatContainerToEnd(divideUnread: boolean = false) {
 
     }, 100)
 }
+
+export function scrollChatContainerToMessageByTime(time: number) {
+    setTimeout(() => {
+        const container = document.getElementById('messages-container')!;
+        for (const element of container.getElementsByTagName('div')) {
+            if (element.getAttribute('data-created-at') === time.toString()) {
+                console.log(element)
+                element.scrollIntoView({block: 'start', behavior: "instant", inline: "start"});
+                break;
+            }
+        }
+        // document.getElementById('messages-container')!.style.overflow = "";
+    }, 200)
+}
