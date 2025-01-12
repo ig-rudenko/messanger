@@ -6,3 +6,4 @@ compose_data
 
 dump.rdb
 .env
+*.drawio.bkp
