@@ -1,7 +1,7 @@
 services:
 
   frontend:
-    image: messanger-front:0.2
+    image: messanger-front:0.3
     build: frontend
     ports:
       - "8000:80"
@@ -14,10 +14,9 @@ services:
       - frontend
 
   api-1:
-    image: messanger:0.2
+    image: messanger:0.3
     build: .
     command: /bin/sh /app/run.sh
-    container_name: messanger-api-1
     env_file: .env
 
     depends_on:
@@ -31,10 +30,9 @@ services:
       - frontend
 
   api-2:
-    image: messanger:0.2
+    image: messanger:0.3
     build: .
     command: /bin/sh /app/run.sh
-    container_name: messanger-api-2
     env_file: .env
 
     depends_on:
@@ -49,26 +47,36 @@ services:
       - backend
       - frontend
 
-  pgbouncer:
-    container_name: pgbouncer
-    image: edoburu/pgbouncer:latest
+  cache-broker:
+    image: redis:7.4-alpine
+    networks:
+      - backend
+
+  rmq:
+    image: rabbitmq:3.13.0-management
     environment:
-      DB_USER: msg_user
-      DB_PASSWORD: msg_password
-      DB_HOST: database
-      DB_NAME: msg_db
-      LISTEN_PORT: 6432
-      AUTH_TYPE: scram-sha-256
-      MAX_CLIENT_CONN: ${PGBOUNCER_MAX_CLIENT_CONN:-100}
-      DEFAULT_POOL_SIZE: ${PGBOUNCER_DEFAULT_POOL_SIZE:-20}
-      POOL_MODE: ${PGBOUNCER_POOL_MODE:-transaction}
-      ADMIN_USERS: postgres,msg_user
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-msg_user}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-msg_password}
+      RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: -rabbit log_levels [{connection,error},{default,error}] disk_free_limit 2147483648
     ports:
-      - "127.0.0.1:6432:6432"
+      - "127.0.0.1:5672:5672"
+      - "127.0.0.1:15672:15672"
+    volumes:
+      - "./compose_data/rabbitmq:/var/lib/rabbitmq"
+    networks:
+      - backend
+
+  synchronizer:
+    image: messanger:0.3
+    build: .
+    command: python synchronizer.py
+    env_file: .env
+
     depends_on:
-      - database
-    healthcheck:
-      test: ['CMD', 'pg_isready', '-h', 'localhost']
+      database:
+        condition: service_healthy
+      rmq:
+        condition: service_started
     networks:
       - backend
 
@@ -79,7 +87,7 @@ services:
       POSTGRES_PASSWORD: msg_password
       POSTGRES_DB: msg_db
     volumes:
-      - "./pg_data:/var/lib/postgresql/data"
+      - "./compose_data/pg_data:/var/lib/postgresql/data"
     ports:
       - "127.0.0.1:5434:5432"
     healthcheck:
@@ -90,13 +98,6 @@ services:
       retries: 5
     networks:
       - backend
-
-  cache-broker:
-    image: redis:7.4-alpine
-    networks:
-      backend:
-        ipv4_address: "10.100.1.10"
-
 
 networks:
   backend:
@@ -112,3 +113,10 @@ networks:
       driver: default
       config:
         - subnet: 10.100.2.0/24
+
+  database:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.100.3.0/24

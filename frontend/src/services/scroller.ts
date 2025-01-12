@@ -17,7 +17,6 @@ export function scrollChatContainerToMessageByTime(time: number) {
         const container = document.getElementById('messages-container')!;
         for (const element of container.getElementsByTagName('div')) {
             if (element.getAttribute('data-created-at') === time.toString()) {
-                console.log(element)
                 element.scrollIntoView({block: 'start', behavior: "instant", inline: "start"});
                 break;
             }

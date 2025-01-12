@@ -30,6 +30,8 @@ class _Settings(BaseSettings):
     redis_cache_max_connections: int = 10
 
     database_url: str = "sqlite+aiosqlite:///db.sqlite3"
+    database_max_connections: int = 10
+
     message_storage_type: MessageStorageType = MessageStorageType.DB_DIRECT  # "no_storage", "rabbitmq"
 
     access_token_expire_minutes: int = 60

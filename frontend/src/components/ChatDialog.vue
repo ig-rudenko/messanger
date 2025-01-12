@@ -60,13 +60,11 @@ let lastReadTime = 0;
 
 
 onMounted( async () => {
-  console.log("onMounted")
   scrollChatContainerToEnd();
   lastReadTime = await chatService.getLastReadTime(props.chatId);
 })
 
 onUpdated(async () => {
-  console.log("onUpdated")
   const messages = document.querySelectorAll('.message');
   messages.forEach(message => observer.observe(message));
   lastReadTime = await chatService.getLastReadTime(props.chatId);
@@ -97,12 +95,14 @@ function getMessageClasses(msg: ChatMessageType, index: number): string[] {
     classes.push(...["bg-indigo-200", "dark:bg-indigo-900"])
   }
 
-  // Если время между предыдущим сообщением и текущим больше 100 сек, добавляем скругление.
-  if (props.chatMessages[index - 1] && props.chatMessages[index].createdAt > (props.chatMessages[index - 1].createdAt + 100)) {
+  const paddingTimeShift = 100 * 1000;
+
+  // Если время между предыдущим сообщением и текущим больше paddingTimeShift ms, добавляем скругление.
+  if (props.chatMessages[index - 1] && props.chatMessages[index].createdAt > (props.chatMessages[index - 1].createdAt + paddingTimeShift)) {
     classes.push(...["rounded-t-xl"])
   }
-  // Если время между последующим сообщением и текущим больше 100 сек, добавляем отступ и скругление.
-  if (props.chatMessages[index + 1] && props.chatMessages[index + 1].createdAt > (props.chatMessages[index].createdAt + 100)) {
+  // Если время между последующим сообщением и текущим больше paddingTimeShift ms, добавляем отступ и скругление.
+  if (props.chatMessages[index + 1] && props.chatMessages[index + 1].createdAt > (props.chatMessages[index].createdAt + paddingTimeShift)) {
     classes.push(...["mb-10", "rounded-b-xl"])
   }
 

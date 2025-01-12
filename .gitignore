@@ -2,6 +2,7 @@ db.sqlite3*
 .idea
 .venv
 venv
-pg_data
+compose_data
 
+dump.rdb
 .env

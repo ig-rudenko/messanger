@@ -9,7 +9,7 @@ from messanger.settings import settings
 
 
 async def main():
-    db_manager.init(settings.database_url)
+    db_manager.init(settings.database_url, pool_size=settings.database_max_connections)
 
     while True:
         syncers = []

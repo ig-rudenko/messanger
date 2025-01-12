@@ -38,7 +38,7 @@ async def get_last_messages(
             )
         )
         .distinct(Message.id)
-        .order_by(Message.created_at.desc())
+        .order_by(Message.id.desc(), Message.created_at.desc())
     )
 
     if limit:

@@ -1,22 +1,47 @@
-FROM python:3.12.8-alpine
+FROM python:3.12.8-alpine AS builder
 
-ENV PYTHONUNBUFFERED=1
+RUN apk update && apk add --no-cache curl
+
+# Устанавливаем Poetry
+RUN curl -sSL https://install.python-poetry.org | python -
+
+# Добавляем Poetry в PATH
+ENV PATH="/root/.local/bin:$PATH"
+
+RUN pip install --upgrade --no-cache-dir pip;
 
 WORKDIR /app
 
-COPY requirements.txt /app/
+COPY pyproject.toml poetry.lock /app/
 
-RUN pip install --upgrade --no-cache-dir pip && \
-    pip install -r requirements.txt --no-cache-dir;
+RUN poetry config virtualenvs.create false && \
+    poetry install --no-root --only main --no-interaction --no-ansi --no-cache;
 
-RUN addgroup -g 10001 user_app_group \
-    && adduser -D -h /app -u 10002 user_app user_app_group \
-    && chown -R user_app:user_app_group /app;
 
-COPY --chown=user_app:user_app_group . /app/
+FROM python:3.12.8-alpine
+LABEL authors="irudenko"
 
-USER user_app
+ENV PYTHONUNBUFFERED=1
+
+RUN addgroup -g 10001 appgroup \
+    && adduser -D -h /app -u 10002 app appgroup \
+    && chown -R app:app /app;
+
+RUN apk update && \
+    apk add --no-cache curl;
+
+WORKDIR /app
+
+# Копируем зависимости из builder-этапа
+COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
+
+COPY --chown=app:appgroup . /app
+
+RUN chmod +x run.sh
+
+USER app
 
 EXPOSE 8000
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["/bin/bash", "/app/run.sh"]

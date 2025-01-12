@@ -26,8 +26,8 @@ def last_messages_query_params(
 ):
     return {
         "limit": limit,
-        "time_from": datetime.fromtimestamp(time_from) if isinstance(time_from, int) else time_from,
-        "time_to": datetime.fromtimestamp(time_to) if isinstance(time_to, int) else time_to,
+        "time_from": datetime.fromtimestamp(time_from / 1000) if isinstance(time_from, int) else time_from,
+        "time_to": datetime.fromtimestamp(time_to / 1000) if isinstance(time_to, int) else time_to,
         "with_unread": with_unread,
     }
 

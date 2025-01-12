@@ -12,7 +12,7 @@ from messanger.sockets.handlers import router as sockets_router
 
 @asynccontextmanager
 async def startup(app_instance: FastAPI):
-    db_manager.init(settings.database_url)
+    db_manager.init(settings.database_url, pool_size=settings.database_max_connections)
     yield
     await db_manager.close()
 

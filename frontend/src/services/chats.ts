@@ -26,7 +26,6 @@ export interface ResponseMessageType extends RequestMessageType{
 export async function handleMessage(data: any): Promise<ResponseMessageType> {
     const msg: ResponseMessageType = JSON.parse(data);
     if (msg.status == "exception") {
-        console.log(msg.message)
         if (msg.message == "Invalid access token") {
             await refreshAccessToken(tokenService)
         }

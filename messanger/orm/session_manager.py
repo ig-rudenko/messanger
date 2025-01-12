@@ -25,27 +25,15 @@ class DatabaseSessionManager:
         self._engine: Optional[AsyncEngine] = None
         self._session_maker: Optional[async_sessionmaker[AsyncSession]] = None
 
-    def init(self, dsn: str, **conn_args) -> None:
+    def init(self, dsn: str, pool_size: int = 10, **conn_args) -> None:
         """Инициализирует соединение с базой данных."""
-
-        # Just additional example of customization.
-        # you can add parameters to init and so on
-        if "postgresql" in dsn:
-            # These settings are needed to work with pgbouncer in transaction mode
-            # because you can't use prepared statements in such case
-            connect_args = {
-                "statement_cache_size": 0,
-                "prepared_statement_cache_size": 0,
-            }
-        else:
-            connect_args = {}
-
-        connect_args.update(conn_args)
-
         self._engine = create_async_engine(
             url=dsn,
+            pool_size=pool_size,  # Размер пула соединений
+            max_overflow=5,  # Максимальное количество "временных" соединений сверх пула
+            pool_timeout=10,  # Тайм-аут ожидания соединения
             pool_pre_ping=True,
-            connect_args=connect_args,
+            connect_args=conn_args,
             # echo=True,
         )
         self._session_maker = async_sessionmaker(

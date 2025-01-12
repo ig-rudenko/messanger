@@ -6,28 +6,23 @@ authors = ["ig-rudenko <ig.rudenko1@yandex.ru>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = ">=3.11,<4.0"
 fastapi = "^0.115.6"
-uvicorn = "^0.33.0"
-pydantic-settings = "^2.7.0"
+uvicorn = "^0.34.0"
+pydantic-settings = "^2.7.1"
 redis = "^5.2.1"
 websockets = "^14.1"
-sqlalchemy = {extras = ["asyncio"], version = "^2.0.36"}
+sqlalchemy = {extras = ["asyncio"], version = "^2.0.37"}
 python-jose = {extras = ["cryptography"], version = "^3.3.0"}
 passlib = "^1.7.4"
 alembic = "^1.14.0"
-pydantic = {extras = ["email"], version = "^2.10.3"}
+pydantic = {extras = ["email"], version = "^2.10.5"}
 bcrypt = "^4.2.1"
 aio-pika = "^9.5.4"
-
+asyncpg = "^0.30.0"
 
 [tool.poetry.group.dev.dependencies]
 black = {extras = ["d"], version = "^24.10.0"}
-
-[tool.poetry.group.postgres.dependencies]
-asyncpg = "^0.30.0"
-
-[tool.poetry.group.sqlite.dependencies]
 aiosqlite = "^0.20.0"
 
 [build-system]
