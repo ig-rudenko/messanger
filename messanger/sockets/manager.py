@@ -133,7 +133,7 @@ class ConnectionManager:
                     message=msg.message.strip(),
                     recipient_id=msg.recipient_id,
                     sender_id=sender_user_id,
-                    created_at=int(datetime.now().timestamp()),
+                    created_at=int(datetime.now().timestamp() * 1000),
                 )
                 # Сначала отправляем.
                 await self.broadcast(response, msg.recipient_id)
@@ -193,7 +193,7 @@ class ConnectionManager:
                         recipient_id=friendship.id,
                         sender_id=user_id,
                         message=f"Пользователь {user_id} {status}.",
-                        created_at=int(datetime.now().timestamp()),
+                        created_at=int(datetime.now().timestamp() * 1000),
                     )
                     tasks.append(self.broadcast(message, friendship.id))
             await asyncio.gather(*tasks)  # Параллельная отправка статусов
@@ -201,22 +201,24 @@ class ConnectionManager:
 
 def get_broadcast_manager() -> BroadcastManager:
     if settings.broadcast_type == "redis":
+        print("Использование Redis очереди в качестве broadcast")
         pool = ConnectionPool.from_url(
             settings.broadcast_redis_url,
             max_connections=settings.broadcast_redis_max_connections,
         )
         return RedisBroadcastManager(Redis(connection_pool=pool))
 
+    print("Использование локальной очереди в качестве broadcast")
     return LocalBroadcastManager()
 
 
 async def get_message_storage() -> MessagesStorage:
     if settings.message_storage_type == MessageStorageType.DB_DIRECT:
-        print("Подключение к БД")
+        print("Использование Базы данных напрямую в качестве хранилища сообщений")
         return DatabaseDirectMessagesStorage()
 
     if settings.message_storage_type == MessageStorageType.RABBITMQ:
-        print("Подключение к RabbitMQ")
+        print("Использование RabbitMQ очереди в качестве хранилища сообщений")
         from messanger.rmq import rmq_connector
 
         await rmq_connector.run_publisher(
@@ -226,6 +228,7 @@ async def get_message_storage() -> MessagesStorage:
         )
         return RabbitMQMessagesStorage(rmq_connector)
 
+    print("Не используется хранилище сообщений!")
     return NoMessagesStorage()
 
 

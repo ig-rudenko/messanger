@@ -1,7 +1,7 @@
 from enum import Enum
 
 from pydantic_settings import BaseSettings
-from pydantic import field_validator, HttpUrl
+from pydantic import field_validator, HttpUrl, RedisDsn
 
 
 class BroadcastType(str, Enum):
@@ -26,11 +26,11 @@ class _Settings(BaseSettings):
     broadcast_redis_max_connections: int = 10
     broadcast_type: BroadcastType = BroadcastType.LOCAL  # local or redis
 
-    redis_cache_url: str = ""
+    redis_cache_url: str = "redis://localhost:6379/0"
     redis_cache_max_connections: int = 10
 
     database_url: str = "sqlite+aiosqlite:///db.sqlite3"
-    message_storage_type: MessageStorageType = MessageStorageType.DB_DIRECT.value  # "no_storage", "rabbitmq"
+    message_storage_type: MessageStorageType = MessageStorageType.DB_DIRECT  # "no_storage", "rabbitmq"
 
     access_token_expire_minutes: int = 60
     refresh_token_expire_hours: int = 24 * 7
@@ -62,12 +62,22 @@ class _Settings(BaseSettings):
     @classmethod
     def validate_sync_es_hosts(cls, value):
         items = value.split(",")
-        return [HttpUrl(item.strip()) for item in items]
+        [HttpUrl(item.strip()) for item in items]
         return value
 
     @property
     def sync_elasticsearch_hosts_list(self) -> list[str]:
         return self.sync_elasticsearch_hosts.split(",")
 
+    @field_validator("redis_cache_url", "broadcast_redis_url")
+    @classmethod
+    def validate_redis_url(cls, value):
+        RedisDsn(value)
+        return value
+
 
 settings = _Settings()
+
+print("Текущие настройки:")
+for key, value in settings.model_dump().items():
+    print(f"     {key} = {value}")

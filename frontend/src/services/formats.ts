@@ -1,8 +1,5 @@
 export function verboseDatetime(timestamp: number): string {
-    // multiplied by 1000 so that the argument is in milliseconds, not seconds
-    const milliseconds = new Date(timestamp * 1000);
-    const dateObject = new Date(milliseconds);
-
+    const dateObject = new Date(timestamp);
     const currentDate = new Date();
 
     const hour = dateObject.toLocaleString("ru-RU", {hour: "2-digit"});

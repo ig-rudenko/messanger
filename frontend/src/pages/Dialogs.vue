@@ -140,7 +140,7 @@ function addMyMessageToChat(data: RequestMessageType) {
     message: data.message,
     recipientId: data.recipientId,
     senderId: currentUserId,
-    createdAt: Math.floor((new Date()).getTime() / 1000)
+    createdAt: Math.floor((new Date()).getTime())
   }
 
   // Обновляем последнее сообщение в панели всех чатов

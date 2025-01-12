@@ -49,7 +49,6 @@ async def get_last_messages(
 
     if time_to:
         query = query.where(Message.created_at <= time_to)
-    print(query.compile(compile_kwargs={"literal_binds": True}))
 
     result = await session.execute(query)
 
@@ -60,7 +59,7 @@ async def get_last_messages(
             message=msg.message,
             recipient_id=msg.recipient_id,
             sender_id=msg.sender_id,
-            created_at=int(msg.created_at.timestamp()),
+            created_at=int(msg.created_at.timestamp() * 1000),
         )
         for msg in result.scalars()
     ]

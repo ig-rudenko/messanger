@@ -29,21 +29,17 @@ class DataBaseSynchronizer(BaseSynchronizer):
 
     async def synchronize(self, messages: list[MessageResponseSchema]):
         async with db_manager.session() as session:  # type: AsyncSession
-
-            print(messages)
             stmt = insert(Message).values(
                 [
                     {
                         "sender_id": message.sender_id,
                         "recipient_id": message.recipient_id,
                         "message": message.message,
-                        "created_at": datetime.fromtimestamp(message.created_at),
+                        "created_at": datetime.fromtimestamp(message.created_at / 1000),
                     }
                     for message in messages
                 ]
             )
-
-            print(stmt)
             await session.execute(stmt)
             await session.commit()
 

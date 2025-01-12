@@ -28,7 +28,6 @@ class RabbitMQConnector:
 
     async def _run_publisher(self, exchange: str, routing_key: str, queue_name: str):
         connection = await self.get_connection()
-        print(connection)
         while True:
             try:
                 async with connection:

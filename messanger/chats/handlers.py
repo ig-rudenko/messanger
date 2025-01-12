@@ -39,7 +39,6 @@ async def get_last_messages_api_view(
     user: User = Depends(get_current_user),
     session=Depends(get_session),
 ):
-    print(query)
     if query["with_unread"]:
         unread_messages_count = await get_unread_messages_count(session, chat_id, user.id, cache=get_cache())
     else:
@@ -70,7 +69,7 @@ async def get_last_read_api_view(
     user: User = Depends(get_current_user),
 ):
     last_read_message_time = await get_last_read_message_time(chat_id, user.id, cache=get_cache())
-    timestamp = int(last_read_message_time.timestamp())
+    timestamp = int(last_read_message_time.timestamp() * 1000)
     return LastReadSchema(timestamp=timestamp)
 
 
@@ -81,5 +80,5 @@ async def update_last_read_api_view(
     user: User = Depends(get_current_user),
 ):
     await update_last_read_message_time(
-        chat_id, user.id, new_datetime=datetime.fromtimestamp(data.timestamp + 1), cache=get_cache()
+        chat_id, user.id, new_datetime=datetime.fromtimestamp((data.timestamp + 1) / 1000), cache=get_cache()
     )
