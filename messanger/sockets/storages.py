@@ -1,12 +1,12 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
 
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+import aio_pika
 
 from ..orm.session_manager import db_manager
 from .schemas import MessageResponseSchema
 from ..chats.models import Message
+from ..settings import settings
 
 
 class MessagesStorage(ABC):
@@ -15,21 +15,10 @@ class MessagesStorage(ABC):
     async def process_message(self, message: MessageResponseSchema):
         pass
 
-    @abstractmethod
-    async def get_messages(
-        self, sender_id: int, recipient_id: int, from_date: datetime, to_date: datetime
-    ) -> list[MessageResponseSchema]:
-        pass
-
 
 class NoMessagesStorage(MessagesStorage):
     async def process_message(self, message: MessageResponseSchema):
         pass
-
-    async def get_messages(
-        self, sender_id: int, recipient_id: int, from_date: datetime, to_date: datetime
-    ) -> list[MessageResponseSchema]:
-        return []
 
 
 class DatabaseDirectMessagesStorage(MessagesStorage):
@@ -46,30 +35,11 @@ class DatabaseDirectMessagesStorage(MessagesStorage):
             )
             await session.commit()
 
-    async def get_messages(
-        self, sender_id: int, recipient_id: int, from_date: datetime, to_date: datetime, limit: int = 50
-    ) -> list[MessageResponseSchema]:
-        async with db_manager.session() as session:  # type: AsyncSession
-            query = (
-                select(Message)
-                .where(
-                    Message.sender_id == sender_id,
-                    Message.recipient_id == recipient_id,
-                    Message.created_at >= from_date,
-                    Message.created_at <= to_date,
-                )
-                .limit(limit)
-            )
 
-            result = await session.execute(query)
-            return [
-                MessageResponseSchema(
-                    type="message",
-                    status="stored",
-                    recipient_id=row.recipient_id,
-                    sender_id=row.sender_id,
-                    message=row.message,
-                    created_at=int(row.created_at.timestamp()),
-                )
-                for row in result.scalars()
-            ]
+class RabbitMQMessagesStorage(MessagesStorage):
+
+    def __init__(self, connector):
+        self._rmq_connector = connector
+
+    async def process_message(self, message: MessageResponseSchema):
+        await self._rmq_connector.publish_message(message.model_dump_json())

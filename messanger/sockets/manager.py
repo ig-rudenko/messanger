@@ -9,12 +9,17 @@ from redis.asyncio import Redis, ConnectionPool, RedisError
 
 from .schemas import MessageRequestSchema, MessageResponseSchema
 from .status import set_user_online, set_user_offline, is_user_online
-from .storages import MessagesStorage, NoMessagesStorage, DatabaseDirectMessagesStorage
+from .storages import (
+    MessagesStorage,
+    NoMessagesStorage,
+    DatabaseDirectMessagesStorage,
+    RabbitMQMessagesStorage,
+)
 from ..cache import AbstractCache, get_cache
 from ..chats.messages import update_last_message
 from ..friendships.services import get_user_friendships
 from ..orm.session_manager import db_manager
-from ..settings import settings
+from ..settings import settings, MessageStorageType
 
 
 class BroadcastManager(ABC):
@@ -205,12 +210,26 @@ def get_broadcast_manager() -> BroadcastManager:
     return LocalBroadcastManager()
 
 
-def get_storage() -> MessagesStorage:
-    if settings.message_storage_type == "db_direct":
+async def get_message_storage() -> MessagesStorage:
+    if settings.message_storage_type == MessageStorageType.DB_DIRECT:
+        print("Подключение к БД")
         return DatabaseDirectMessagesStorage()
+
+    if settings.message_storage_type == MessageStorageType.RABBITMQ:
+        print("Подключение к RabbitMQ")
+        from messanger.rmq import rmq_connector
+
+        await rmq_connector.run_publisher(
+            exchange=settings.sync_rabbitmq_exchange,
+            routing_key=settings.sync_rabbitmq_routing_key,
+            queue_name=settings.sync_rabbitmq_queue_name,
+        )
+        return RabbitMQMessagesStorage(rmq_connector)
+
     return NoMessagesStorage()
 
 
-message_storage = get_storage()
-broadcast_manager = get_broadcast_manager()
-manager = ConnectionManager(broadcast_manager, message_storage, cache=get_cache())
+async def get_connection_manager() -> ConnectionManager:
+    message_storage = await get_message_storage()
+    broadcast_manager = get_broadcast_manager()
+    return ConnectionManager(broadcast_manager, message_storage, cache=get_cache())
