@@ -3,8 +3,8 @@ from datetime import datetime
 from sqlalchemy import Text, func
 from sqlalchemy.orm import Mapped, mapped_column
 
-from messanger.orm.base_model import OrmBase
-from messanger.orm.manager import Manager
+from messenger.orm.base_model import OrmBase
+from messenger.orm.manager import Manager
 
 
 class Message(OrmBase, Manager):

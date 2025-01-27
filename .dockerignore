@@ -17,7 +17,7 @@ README.md
 .git
 .gitignore
 .env.example
-example.messanger.service
+example.messenger.service
 
 # Distribution / packaging
 .Python

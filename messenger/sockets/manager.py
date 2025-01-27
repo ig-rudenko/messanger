@@ -238,7 +238,7 @@ def get_db_message_storage() -> MessagesStorage:
 @cache
 def get_rmq_message_storage() -> MessagesStorage:
     logger.info("Использование RabbitMQ очереди в качестве хранилища сообщений")
-    from messanger.rmq import rmq_connector
+    from messenger.rmq import rmq_connector
 
     return RabbitMQMessagesStorage(rmq_connector)
 
@@ -248,7 +248,7 @@ async def get_message_storage() -> MessagesStorage:
         return get_db_message_storage()
 
     if settings.message_storage_type == MessageStorageType.RABBITMQ:
-        from messanger.rmq import rmq_connector
+        from messenger.rmq import rmq_connector
 
         await rmq_connector.run_publisher()
         return get_rmq_message_storage()

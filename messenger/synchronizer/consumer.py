@@ -1,9 +1,9 @@
 import aio_pika
 from pydantic import ValidationError
 
-from messanger.settings import settings
-from messanger.rmq import rmq_connector
-from messanger.sockets.schemas import MessageResponseSchema
+from messenger.settings import settings
+from messenger.rmq import rmq_connector
+from messenger.sockets.schemas import MessageResponseSchema
 from .sync import BaseSynchronizer
 
 

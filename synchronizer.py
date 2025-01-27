@@ -2,10 +2,10 @@ import asyncio
 
 import aio_pika
 
-from messanger.orm.session_manager import db_manager
-from messanger.synchronizer.consumer import consume_messages_from_queue
-from messanger.synchronizer.sync import DataBaseSynchronizer, ElasticsearchSynchronizer
-from messanger.settings import settings
+from messenger.orm.session_manager import db_manager
+from messenger.synchronizer.consumer import consume_messages_from_queue
+from messenger.synchronizer.sync import DataBaseSynchronizer, ElasticsearchSynchronizer
+from messenger.settings import settings
 
 
 async def main():

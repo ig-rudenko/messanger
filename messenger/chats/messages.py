@@ -3,9 +3,9 @@ from datetime import datetime, UTC
 from sqlalchemy import select, or_, and_, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from messanger.cache import AbstractCache
-from messanger.chats.models import Message
-from messanger.sockets.schemas import MessageResponseSchema
+from messenger.cache import AbstractCache
+from messenger.chats.models import Message
+from messenger.sockets.schemas import MessageResponseSchema
 
 
 async def get_last_messages(

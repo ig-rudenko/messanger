@@ -1,7 +1,7 @@
 services:
 
   frontend:
-    image: messanger-front:0.3
+    image: messenger-front:0.3
     build: frontend
     ports:
       - "8000:80"
@@ -14,7 +14,7 @@ services:
       - frontend
 
   api-1:
-    image: messanger:0.3
+    image: messenger:0.3
     build: .
     command: /bin/sh /app/run.sh
     env_file: .env
@@ -30,7 +30,7 @@ services:
       - frontend
 
   api-2:
-    image: messanger:0.3
+    image: messenger:0.3
     build: .
     command: /bin/sh /app/run.sh
     env_file: .env
@@ -67,7 +67,7 @@ services:
       - backend
 
   synchronizer:
-    image: messanger:0.3
+    image: messenger:0.3
     build: .
     command: python synchronizer.py
     env_file: .env

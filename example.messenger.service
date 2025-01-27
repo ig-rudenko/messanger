@@ -1,5 +1,5 @@
 [Unit]
-Description=Messanger API and chat service
+Description=Messenger API and chat service
 
 [Service]
 User=

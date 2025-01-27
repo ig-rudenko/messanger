@@ -1,8 +1,8 @@
 from fastapi import WebSocket, Depends, HTTPException
 
-from messanger.auth.models import User
-from messanger.auth.users import get_current_user
-from messanger.orm.session_manager import get_session
+from messenger.auth.models import User
+from messenger.auth.users import get_current_user
+from messenger.orm.session_manager import get_session
 
 
 async def authenticate_websocket(websocket: WebSocket, session=Depends(get_session)) -> User:

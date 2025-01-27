@@ -5,11 +5,11 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 from sqlalchemy import pool
 from alembic import context
 
-from messanger.auth.models import User
-from messanger.friendships.models import Friendship
-from messanger.chats.models import Message
-from messanger.orm.base_model import OrmBase
-from messanger.settings import settings
+from messenger.auth.models import User
+from messenger.friendships.models import Friendship
+from messenger.chats.models import Message
+from messenger.orm.base_model import OrmBase
+from messenger.settings import settings
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

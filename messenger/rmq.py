@@ -5,7 +5,7 @@ from typing import Iterator, NamedTuple, Literal
 import aio_pika
 from asyncio.queues import Queue
 
-from messanger.settings import settings
+from messenger.settings import settings
 
 
 class ExchangeChannelPair(NamedTuple):

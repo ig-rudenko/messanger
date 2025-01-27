@@ -2,18 +2,18 @@ from datetime import datetime
 
 from fastapi import Depends, APIRouter, Query
 
-from messanger.auth.models import User
-from messanger.auth.users import get_current_user
-from messanger.cache import get_cache
-from messanger.chats.messages import (
+from messenger.auth.models import User
+from messenger.auth.users import get_current_user
+from messenger.cache import get_cache
+from messenger.chats.messages import (
     update_last_read_message_time,
     get_last_read_message_time,
     get_unread_messages_count,
     get_last_messages,
 )
-from messanger.chats.schemas import UpdateLastReadSchema, LastReadSchema
-from messanger.orm.session_manager import get_session
-from messanger.sockets.schemas import MessageResponseSchema
+from messenger.chats.schemas import UpdateLastReadSchema, LastReadSchema
+from messenger.orm.session_manager import get_session
+from messenger.sockets.schemas import MessageResponseSchema
 
 router = APIRouter(prefix="/chats", tags=["chats"])
 

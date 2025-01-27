@@ -4,9 +4,9 @@ from datetime import datetime
 from sqlalchemy import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from messanger.chats.models import Message
-from messanger.sockets.schemas import MessageResponseSchema
-from messanger.orm.session_manager import db_manager
+from messenger.chats.models import Message
+from messenger.sockets.schemas import MessageResponseSchema
+from messenger.orm.session_manager import db_manager
 
 
 class BaseSynchronizer(ABC):

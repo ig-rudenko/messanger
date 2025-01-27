@@ -2,12 +2,12 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from messanger.auth.handlers import router as auth_router
-from messanger.chats.handlers import router as chats_router
-from messanger.friendships.handlers import router as friendships_router
-from messanger.orm.session_manager import db_manager
-from messanger.settings import settings
-from messanger.sockets.handlers import router as sockets_router
+from messenger.auth.handlers import router as auth_router
+from messenger.chats.handlers import router as chats_router
+from messenger.friendships.handlers import router as friendships_router
+from messenger.orm.session_manager import db_manager
+from messenger.settings import settings
+from messenger.sockets.handlers import router as sockets_router
 
 
 @asynccontextmanager

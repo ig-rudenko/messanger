@@ -59,9 +59,9 @@ MESSAGE_STORAGE_TYPE=database
 # Если был выбран "rabbitmq", то нужно дополнительно указать переменные подключения к RabbitMQ:
 SYNC_RABBITMQ_URL=amqp://msg_user:msg_password@rmq:5672/
 SYNC_RABBITMQ_MAX_CONNECTIONS=10
-SYNC_RABBITMQ_EXCHANGE=messanger
-SYNC_RABBITMQ_ROUTING_KEY=messanger
-SYNC_RABBITMQ_QUEUE_NAME=messanger
+SYNC_RABBITMQ_EXCHANGE=messenger
+SYNC_RABBITMQ_ROUTING_KEY=messenger
+SYNC_RABBITMQ_QUEUE_NAME=messenger
 ```
 
 ### 🔄 Synchronizer
@@ -93,7 +93,7 @@ SYNC_BULK_SIZE=3
 # Подключения к RabbitMQ
 SYNC_RABBITMQ_URL=amqp://msg_user:msg_password@rmq:5672/
 SYNC_RABBITMQ_MAX_CONNECTIONS=10
-SYNC_RABBITMQ_EXCHANGE=messanger
-SYNC_RABBITMQ_ROUTING_KEY=messanger
-SYNC_RABBITMQ_QUEUE_NAME=messanger
+SYNC_RABBITMQ_EXCHANGE=messenger
+SYNC_RABBITMQ_ROUTING_KEY=messenger
+SYNC_RABBITMQ_QUEUE_NAME=messenger
 ```

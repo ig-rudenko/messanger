@@ -1,4 +1,4 @@
-from messanger.cache import AbstractCache
+from messenger.cache import AbstractCache
 
 
 async def set_user_online(user_id: int, cache: AbstractCache):

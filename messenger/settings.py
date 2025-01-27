@@ -19,9 +19,9 @@ class _SyncSettings(BaseSettings):
     bulk_size: int = 100
     rabbitmq_url: str = "amqp://guest:guest@localhost:5672/"
     rabbitmq_max_connections: int = 10
-    rabbitmq_exchange: str = "messanger"
-    rabbitmq_routing_key: str = "messanger"
-    rabbitmq_queue_name: str = "messanger"
+    rabbitmq_exchange: str = "messenger"
+    rabbitmq_routing_key: str = "messenger"
+    rabbitmq_queue_name: str = "messenger"
 
     elasticsearch_hosts: str = "http://localhost:9200"
 
