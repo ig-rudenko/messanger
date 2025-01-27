@@ -13,10 +13,10 @@ async def main():
 
     while True:
         syncers = []
-        if "database" in settings.sync_storages_list:
+        if "database" in settings.sync.storages_list:
             print("Используется синхронизатор: База данных")
             syncers.append(DataBaseSynchronizer())
-        if "elasticsearch" in settings.sync_storages_list:
+        if "elasticsearch" in settings.sync.storages_list:
             print("Используется синхронизатор: Elasticsearch")
             syncers.append(ElasticsearchSynchronizer())
 

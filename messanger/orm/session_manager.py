@@ -27,15 +27,22 @@ class DatabaseSessionManager:
 
     def init(self, dsn: str, pool_size: int = 10, **conn_args) -> None:
         """Инициализирует соединение с базой данных."""
-        self._engine = create_async_engine(
-            url=dsn,
-            pool_size=pool_size,  # Размер пула соединений
-            max_overflow=5,  # Максимальное количество "временных" соединений сверх пула
-            pool_timeout=10,  # Тайм-аут ожидания соединения
-            pool_pre_ping=True,
-            connect_args=conn_args,
-            # echo=True,
-        )
+        if "sqlite" in dsn:
+            self._engine = create_async_engine(
+                url=dsn,
+                connect_args=conn_args,
+                # echo=True,
+            )
+        else:
+            self._engine = create_async_engine(
+                url=dsn,
+                pool_size=pool_size,  # Размер пула соединений
+                max_overflow=5,  # Максимальное количество "временных" соединений сверх пула
+                pool_timeout=10,  # Тайм-аут ожидания соединения
+                pool_pre_ping=True,
+                connect_args=conn_args,
+                # echo=True,
+            )
         self._session_maker = async_sessionmaker(
             bind=self._engine,
             expire_on_commit=False,

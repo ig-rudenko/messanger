@@ -5,7 +5,6 @@ from typing import Iterator, NamedTuple, Literal
 import aio_pika
 from asyncio.queues import Queue
 
-from messanger.deco import singleton
 from messanger.settings import settings
 
 
@@ -107,8 +106,8 @@ class RabbitMQConnector:
 
 
 rmq_connector = RabbitMQConnector(
-    settings.sync_rabbitmq_url,
-    exchange=settings.sync_rabbitmq_exchange,
-    routing_key=settings.sync_rabbitmq_routing_key,
-    queue_name=settings.sync_rabbitmq_queue_name,
+    settings.sync.rabbitmq_url,
+    exchange=settings.sync.rabbitmq_exchange,
+    routing_key=settings.sync.rabbitmq_routing_key,
+    queue_name=settings.sync.rabbitmq_queue_name,
 )

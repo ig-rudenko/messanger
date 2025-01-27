@@ -16,7 +16,7 @@ async def consume_messages_from_queue(syncs: list[BaseSynchronizer]):
             buffer.append(message)
 
             # Если в буфере накопились сообщения
-            if len(buffer) >= settings.sync_bulk_size:
+            if len(buffer) >= settings.sync.bulk_size:
 
                 messages = []
                 for msg in buffer:

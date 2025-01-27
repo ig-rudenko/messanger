@@ -3,7 +3,7 @@ from datetime import timedelta, datetime, UTC
 
 from fastapi import HTTPException
 from fastapi.security import OAuth2PasswordBearer
-from jose import jwt, JWTError
+from jose import jwt, JWTError, ExpiredSignatureError
 
 from .exc import (
     CredentialsException,
@@ -74,7 +74,7 @@ def _get_token_payload(token: str, token_type: str) -> dict:
     """
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-    except JWTError:
+    except (JWTError, ExpiredSignatureError):
         raise _get_invalid_token_exc(token_type)
 
     if payload.get("type") != token_type:

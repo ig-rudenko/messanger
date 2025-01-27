@@ -2,7 +2,8 @@ import asyncio
 from abc import ABC, abstractmethod
 from asyncio import Task
 from datetime import datetime
-from functools import lru_cache
+from functools import cache
+from logging import getLogger
 
 from fastapi import WebSocket, WebSocketDisconnect
 from pydantic import ValidationError
@@ -18,6 +19,7 @@ from .storages import (
 )
 from ..cache import AbstractCache, get_cache
 from ..chats.messages import update_last_message
+from ..deco import singleton
 from ..friendships.services import get_user_friendships
 from ..orm.session_manager import db_manager
 from ..settings import settings, MessageStorageType
@@ -90,6 +92,7 @@ class LocalBroadcastManager(BroadcastManager):
         pass
 
 
+@singleton
 class ConnectionManager:
     def __init__(self, broadcast: BroadcastManager, storage: MessagesStorage, cache: AbstractCache):
         self._active_connections: dict[int, list[WebSocket]] = {}
@@ -156,7 +159,7 @@ class ConnectionManager:
 
     async def _check_user_online_status(self):
         while True:
-            for user_id, connections in self._active_connections.items():
+            for user_id, connections in list(self._active_connections.items()):
                 if connections:
                     # Пользователь находится в сети.
                     await self._set_online(user_id)
@@ -200,52 +203,68 @@ class ConnectionManager:
             await asyncio.gather(*tasks)  # Параллельная отправка статусов
 
 
-@lru_cache()
+logger = getLogger(__name__)
+
+
+@cache
+def get_redis_broadcast_manager() -> BroadcastManager:
+    logger.info("Использование Redis очереди в качестве broadcast")
+    pool = ConnectionPool.from_url(
+        settings.broadcast_redis_url,
+        max_connections=settings.broadcast_redis_max_connections,
+    )
+    return RedisBroadcastManager(Redis(connection_pool=pool))
+
+
+@cache
+def get_local_broadcast_manager() -> BroadcastManager:
+    logger.info("Использование локальной очереди в качестве broadcast")
+    return LocalBroadcastManager()
+
+
+@cache
 def get_broadcast_manager() -> BroadcastManager:
     if settings.broadcast_type == "redis":
-        print("Использование Redis очереди в качестве broadcast")
-        pool = ConnectionPool.from_url(
-            settings.broadcast_redis_url,
-            max_connections=settings.broadcast_redis_max_connections,
-        )
-        return RedisBroadcastManager(Redis(connection_pool=pool))
+        return get_redis_broadcast_manager()
+    return get_local_broadcast_manager()
 
-    print("Использование локальной очереди в качестве broadcast")
-    return LocalBroadcastManager()
+
+@cache
+def get_db_message_storage() -> MessagesStorage:
+    logger.info("Использование БД в качестве хранилища сообщений")
+    return DatabaseDirectMessagesStorage()
+
+
+@cache
+def get_rmq_message_storage() -> MessagesStorage:
+    logger.info("Использование RabbitMQ очереди в качестве хранилища сообщений")
+    from messanger.rmq import rmq_connector
+
+    return RabbitMQMessagesStorage(rmq_connector)
 
 
 async def get_message_storage() -> MessagesStorage:
     if settings.message_storage_type == MessageStorageType.DB_DIRECT:
-
-        @lru_cache()
-        def get_db_storage():
-            print("Использование БД в качестве хранилища сообщений")
-            return DatabaseDirectMessagesStorage()
-
-        return get_db_storage()
+        return get_db_message_storage()
 
     if settings.message_storage_type == MessageStorageType.RABBITMQ:
         from messanger.rmq import rmq_connector
 
         await rmq_connector.run_publisher()
+        return get_rmq_message_storage()
 
-        @lru_cache()
-        def get_rmq_storage():
-            print("Использование RabbitMQ очереди в качестве хранилища сообщений")
-            return RabbitMQMessagesStorage(rmq_connector)
-
-        return get_rmq_storage()
-
-    print("Не используется хранилище сообщений!")
+    logger.warning("Не используется хранилище сообщений!")
     return NoMessagesStorage()
 
 
+@cache
+def create_connection_manager(
+    broadcast_manager: BroadcastManager, message_storage: MessagesStorage
+) -> ConnectionManager:
+    return ConnectionManager(broadcast_manager, message_storage, cache=get_cache())
+
+
 async def get_connection_manager() -> ConnectionManager:
+    broadcast_manager = get_broadcast_manager()
     message_storage = await get_message_storage()
-
-    @lru_cache()
-    def get_manager():
-        broadcast_manager = get_broadcast_manager()
-        return ConnectionManager(broadcast_manager, message_storage, cache=get_cache())
-
-    return get_manager()
+    return create_connection_manager(broadcast_manager, message_storage)
