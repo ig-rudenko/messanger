@@ -9,6 +9,6 @@ passlib~=1.7.4
 alembic~=1.14.0
 pydantic[email]~=2.10.3
 bcrypt
-starlette~=0.41.3
+starlette~=0.47.2
 asyncpg~=0.30.0
 aiosqlite~=0.20.0
